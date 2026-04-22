@@ -87,6 +87,8 @@
       canvas._gameInited = true;
     }
     Game.start(gameStage, gameScore, gameLives);
+    const initState = Game.getState();
+    $('hud-par').textContent = initState.par;
     $('controls-hint').classList.remove('hidden');
   }
 
@@ -132,8 +134,12 @@
       gameScore += 500;
       Game.showToast('🏆 전 코스 클리어! +500점');
     }
-    $('hud-stage').textContent = gameStage + 1;
+    $('hud-stage').textContent   = gameStage + 1;
+    $('hud-strokes').textContent = 0;
     Game.start(gameStage, gameScore, gameLives);
+    // Update par for new stage
+    const st = Game.getState();
+    $('hud-par').textContent = st.par;
     $('controls-hint').classList.remove('hidden');
   }
 
@@ -304,7 +310,19 @@
     // Leaderboard screen
     $('btn-back-game').addEventListener('click', () => {
       if (rankUnsub) { rankUnsub(); rankUnsub = null; }
-      showScreen('game');
+      // Show game screen without resetting – resume current game
+      ['login', 'game', 'leaderboard'].forEach(id => {
+        const el = $('screen-' + id);
+        if (!el) return;
+        el.classList.toggle('hidden', id !== 'game');
+        el.classList.toggle('active', id === 'game');
+      });
+      const s = Game.getState();
+      if (s && s.phase !== 'cleared') {
+        Game.start(s.stageIndex, s.score, s.lives);
+      } else {
+        startNewGame();
+      }
     });
     $('btn-refresh-rank').addEventListener('click', loadLeaderboard);
   }

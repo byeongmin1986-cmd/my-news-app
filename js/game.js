@@ -348,12 +348,8 @@ const Game = (() => {
     if (zone === 'rough')  friction = FRICTION_ROUGH;
     if (zone === 'bunker') friction = FRICTION_BUNKER;
 
-    // Slope
+    // Slope acceleration
     const slope = getSlopeAt(ball.x, ball.y);
-    ball.vx += slope.ax * SLOPE_FORCE * (1 / SLOPE_FORCE);
-    ball.vy += slope.ay * SLOPE_FORCE * (1 / SLOPE_FORCE);
-
-    // Actually just add slope acceleration directly
     ball.vx += slope.ax;
     ball.vy += slope.ay;
 
@@ -531,7 +527,6 @@ const Game = (() => {
 
   function drawWaterRipple(rx, ry, rw, rh) {
     ctx.save();
-    ctx.clipPath = null;
     ctx.globalAlpha = 0.25 + 0.1 * Math.sin(Date.now() / 400);
     ctx.strokeStyle = '#90caf9';
     ctx.lineWidth = 1.5;
