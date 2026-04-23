@@ -1,188 +1,376 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Mini Golf Putt</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>지뢰찾기</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      user-select: none; -webkit-user-select: none;
+    }
+    body {
+      background: #c0c0c0;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 14px 10px 24px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    h1 { font-size: 17px; font-weight: bold; margin-bottom: 10px; color: #000; }
+
+    /* Difficulty */
+    .diff-row { display: flex; gap: 4px; margin-bottom: 10px; }
+    .diff-btn {
+      padding: 5px 16px; font-size: 13px; font-weight: bold; font-family: inherit;
+      background: #c0c0c0; color: #000; cursor: pointer;
+      border: 2px solid; border-color: #fff #808080 #808080 #fff;
+    }
+    .diff-btn.active,
+    .diff-btn:active { border-color: #808080 #fff #fff #808080; }
+
+    /* Game frame */
+    .game-frame {
+      background: #c0c0c0;
+      border: 3px solid; border-color: #fff #808080 #808080 #fff;
+      padding: 8px; display: inline-flex; flex-direction: column; gap: 8px;
+    }
+
+    /* Header */
+    .header {
+      border: 2px solid; border-color: #808080 #fff #fff #808080;
+      padding: 5px 8px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .lcd {
+      background: #000; color: #f00;
+      font-family: 'Courier New', monospace;
+      font-size: 26px; font-weight: bold;
+      padding: 1px 5px; min-width: 54px; text-align: right;
+      letter-spacing: 3px; line-height: 1.2;
+      border: 1px solid #808080;
+    }
+    .face-btn {
+      width: 38px; height: 38px; font-size: 24px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      background: #c0c0c0; cursor: pointer;
+      border: 2px solid; border-color: #fff #808080 #808080 #fff;
+    }
+    .face-btn:active { border-color: #808080 #fff #fff #808080; }
+
+    /* Grid wrapper */
+    .grid-wrap {
+      overflow: auto; -webkit-overflow-scrolling: touch;
+      border: 3px solid; border-color: #808080 #fff #fff #808080;
+      max-width: calc(100vw - 56px);
+    }
+    .grid {
+      display: grid; line-height: 0;
+      touch-action: none;
+    }
+
+    /* Cell */
+    .cell {
+      width: var(--cs); height: var(--cs);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: Arial, sans-serif;
+      font-size: calc(var(--cs) * 0.58); font-weight: bold; line-height: 1;
+      cursor: pointer; background: #c0c0c0;
+      border: 2px solid; border-color: #fff #808080 #808080 #fff;
+      flex-shrink: 0;
+    }
+    .cell.open {
+      background: #c0c0c0;
+      border: 1px solid #808080;
+      font-size: calc(var(--cs) * 0.62);
+    }
+    .cell.boom { background: #f00; }
+    .n1{color:#0000ff} .n2{color:#007b00} .n3{color:#ff0000}
+    .n4{color:#00007b} .n5{color:#7b0000} .n6{color:#007b7b}
+    .n7{color:#000}    .n8{color:#808080}
+
+    /* Overlay */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      align-items: center; justify-content: center; z-index: 200;
+    }
+    .overlay.show { display: flex; }
+    .ov-box {
+      background: #c0c0c0;
+      border: 3px solid; border-color: #fff #808080 #808080 #fff;
+      padding: 22px 32px; text-align: center; min-width: 200px;
+    }
+    .ov-title { font-size: 22px; font-weight: bold; margin-bottom: 6px; }
+    .ov-sub   { font-size: 13px; color: #444; margin-bottom: 16px; }
+    .ov-btn {
+      padding: 6px 22px; font-size: 13px; font-weight: bold; font-family: inherit;
+      background: #c0c0c0; color: #000; cursor: pointer;
+      border: 2px solid; border-color: #fff #808080 #808080 #fff;
+    }
+    .ov-btn:active { border-color: #808080 #fff #fff #808080; }
+
+    .hint { margin-top: 9px; font-size: 11px; color: #555; text-align: center; }
+  </style>
 </head>
 <body>
-  <!-- Login Screen -->
-  <div id="screen-login" class="screen active">
-    <div class="login-container">
-      <div class="logo">
-        <div class="logo-icon">⛳</div>
-        <h1>Mini Golf Putt</h1>
-        <p class="logo-sub">글로벌 퍼팅 챌린지</p>
-      </div>
-      <div class="login-card">
-        <p class="login-desc">구글 계정으로 로그인하고<br/>전 세계 플레이어와 경쟁하세요!</p>
-        <button id="btn-google-login" class="btn-google">
-          <svg width="20" height="20" viewBox="0 0 48 48">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          </svg>
-          Google로 로그인
-        </button>
-        <div id="login-error" class="login-error hidden"></div>
-      </div>
-      <div class="login-footer">
-        <button id="btn-guest-play" class="btn-guest">게스트로 플레이</button>
-      </div>
-    </div>
+
+<h1>💣 지뢰찾기</h1>
+
+<div class="diff-row">
+  <button class="diff-btn active" data-lv="easy">초급</button>
+  <button class="diff-btn" data-lv="medium">중급</button>
+  <button class="diff-btn" data-lv="hard">고급</button>
+</div>
+
+<div class="game-frame">
+  <div class="header">
+    <div class="lcd" id="lcd-mines">010</div>
+    <button class="face-btn" id="face">😀</button>
+    <div class="lcd" id="lcd-time">000</div>
   </div>
-
-  <!-- Game Screen -->
-  <div id="screen-game" class="screen hidden">
-    <div class="game-hud">
-      <div class="hud-left">
-        <div class="hud-item">
-          <span class="hud-label">STAGE</span>
-          <span id="hud-stage" class="hud-value">1</span>
-        </div>
-        <div class="hud-item">
-          <span class="hud-label">PAR</span>
-          <span id="hud-par" class="hud-value">3</span>
-        </div>
-      </div>
-      <div class="hud-center">
-        <div class="hud-item">
-          <span class="hud-label">STROKES</span>
-          <span id="hud-strokes" class="hud-value">0</span>
-        </div>
-      </div>
-      <div class="hud-right">
-        <div class="hud-item">
-          <span class="hud-label">SCORE</span>
-          <span id="hud-score" class="hud-value">0</span>
-        </div>
-        <div class="hud-lives" id="hud-lives">
-          <span class="life-icon">❤️</span>
-          <span class="life-icon">❤️</span>
-          <span class="life-icon">❤️</span>
-        </div>
-      </div>
-    </div>
-
-    <canvas id="game-canvas"></canvas>
-
-    <div class="game-controls-hint" id="controls-hint">
-      <span>당겨서 퍼팅하세요</span>
-    </div>
-
-    <div class="shot-power-bar" id="power-bar-container">
-      <div class="power-bar-track">
-        <div id="power-bar-fill" class="power-bar-fill"></div>
-      </div>
-      <span id="power-label" class="power-label">0%</span>
-    </div>
-
-    <button id="btn-menu" class="btn-menu">☰</button>
+  <div class="grid-wrap">
+    <div class="grid" id="grid"></div>
   </div>
+</div>
 
-  <!-- Stage Clear Overlay -->
-  <div id="overlay-stage-clear" class="overlay hidden">
-    <div class="overlay-card">
-      <div class="overlay-icon">🎉</div>
-      <h2 id="clear-title">홀인!</h2>
-      <div class="clear-stats">
-        <div class="stat-row">
-          <span>타수</span>
-          <span id="clear-strokes">-</span>
-        </div>
-        <div class="stat-row">
-          <span>파</span>
-          <span id="clear-par">-</span>
-        </div>
-        <div class="stat-row highlight">
-          <span>결과</span>
-          <span id="clear-result">-</span>
-        </div>
-        <div class="stat-row">
-          <span>획득 점수</span>
-          <span id="clear-points">+0</span>
-        </div>
-      </div>
-      <button id="btn-next-stage" class="btn-primary">다음 스테이지</button>
-    </div>
+<p class="hint">📱 길게 누르기 = 🚩 깃발&nbsp;&nbsp;|&nbsp;&nbsp;🖱️ 우클릭 = 🚩 깃발</p>
+
+<div class="overlay" id="overlay">
+  <div class="ov-box">
+    <div class="ov-title" id="ov-title">💥 게임 오버!</div>
+    <div class="ov-sub"   id="ov-sub"></div>
+    <button class="ov-btn" id="ov-retry">다시 시작</button>
   </div>
+</div>
 
-  <!-- Game Over Overlay -->
-  <div id="overlay-game-over" class="overlay hidden">
-    <div class="overlay-card">
-      <div class="overlay-icon">💔</div>
-      <h2>게임 오버</h2>
-      <div class="clear-stats">
-        <div class="stat-row">
-          <span>도달 스테이지</span>
-          <span id="go-stage">-</span>
-        </div>
-        <div class="stat-row highlight">
-          <span>최종 점수</span>
-          <span id="go-score">-</span>
-        </div>
-      </div>
-      <button id="btn-restart" class="btn-primary">다시 시작</button>
-      <button id="btn-go-rank" class="btn-secondary">랭킹 보기</button>
-    </div>
-  </div>
+<script>
+'use strict';
 
-  <!-- Menu Overlay -->
-  <div id="overlay-menu" class="overlay hidden">
-    <div class="overlay-card">
-      <h2>메뉴</h2>
-      <button id="btn-resume" class="btn-primary">계속하기</button>
-      <button id="btn-menu-rank" class="btn-secondary">랭킹</button>
-      <button id="btn-menu-restart" class="btn-secondary">처음부터</button>
-      <button id="btn-logout" class="btn-danger">로그아웃</button>
-    </div>
-  </div>
+const LEVELS = {
+  easy:   { rows:9,  cols:9,  mines:10, cs:34 },
+  medium: { rows:16, cols:16, mines:40, cs:30 },
+  hard:   { rows:16, cols:30, mines:99, cs:26 },
+};
 
-  <!-- Leaderboard Screen -->
-  <div id="screen-leaderboard" class="screen hidden">
-    <div class="leaderboard-header">
-      <button id="btn-back-game" class="btn-back">←</button>
-      <h2>🏆 글로벌 랭킹</h2>
-      <button id="btn-refresh-rank" class="btn-refresh">↻</button>
-    </div>
-    <div class="my-rank-card" id="my-rank-card">
-      <span class="my-rank-label">나의 순위</span>
-      <span id="my-rank-value">-</span>
-      <span id="my-rank-score">0점</span>
-    </div>
-    <div class="leaderboard-list" id="leaderboard-list">
-      <div class="loading-spinner">불러오는 중...</div>
-    </div>
-  </div>
+let cfg, board, vis; // vis: 0=hidden 1=open 2=flag
+let phase;           // idle playing won lost
+let flagsLeft, secs, tickId;
+let lv = 'easy';
 
-  <!-- Firebase SDKs -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, onSnapshot, serverTimestamp }
-      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const $ = id => document.getElementById(id);
+const grid      = $('grid');
+const face      = $('face');
+const lcdMines  = $('lcd-mines');
+const lcdTime   = $('lcd-time');
+const overlay   = $('overlay');
+const ovTitle   = $('ov-title');
+const ovSub     = $('ov-sub');
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyA23zfEM-6jLV5kYdHVxY0F4ZwftnsQ3lI",
-      authDomain: "my-africa-project-3d79c.firebaseapp.com",
-      projectId: "my-africa-project-3d79c",
-      appId: "1:656175409919:web:e181b29ec44a41c5163aca"
-    };
+// ── helpers ─────────────────────────────────────────────────────────────────
+function pad(n){ return String(Math.max(-99,Math.min(999,n|0))).padStart(3,'0'); }
+function idx(r,c){ return r*cfg.cols+c; }
+function inBounds(r,c){ return r>=0&&r<cfg.rows&&c>=0&&c<cfg.cols; }
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+// ── init ─────────────────────────────────────────────────────────────────────
+function newGame(){
+  cfg = {...LEVELS[lv]};
+  board = new Int8Array(cfg.rows*cfg.cols);   // -1=mine 0-8=count
+  vis   = new Uint8Array(cfg.rows*cfg.cols);  // 0/1/2
+  phase = 'idle';
+  flagsLeft = cfg.mines;
+  secs = 0;
+  clearInterval(tickId); tickId = null;
+  lcdMines.textContent = pad(flagsLeft);
+  lcdTime.textContent  = '000';
+  face.textContent = '😀';
+  overlay.classList.remove('show');
+  buildGrid();
+}
 
-    window.__firebase = { auth, db, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
-      doc, setDoc, getDoc, collection, query, orderBy, limit, onSnapshot, serverTimestamp };
-  </script>
-  <script src="js/game.js"></script>
-  <script src="js/app.js"></script>
+function buildGrid(){
+  grid.style.setProperty('--cs', cfg.cs+'px');
+  grid.style.gridTemplateColumns = `repeat(${cfg.cols},${cfg.cs}px)`;
+  grid.innerHTML = '';
+  for(let i=0;i<cfg.rows*cfg.cols;i++){
+    const d = document.createElement('div');
+    d.className = 'cell'; d.dataset.i = i;
+    grid.appendChild(d);
+  }
+}
+
+// ── place mines (safe zone around first click) ───────────────────────────────
+function placeMines(safeI){
+  const {rows,cols,mines} = cfg;
+  const sr=safeI/cols|0, sc=safeI%cols;
+  const safe=new Set();
+  for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+    const nr=sr+dr,nc=sc+dc;
+    if(inBounds(nr,nc)) safe.add(idx(nr,nc));
+  }
+  let placed=0;
+  while(placed<mines){
+    const i=Math.random()*cfg.rows*cfg.cols|0;
+    if(board[i]!==-1&&!safe.has(i)){ board[i]=-1; placed++; }
+  }
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    const i=idx(r,c);
+    if(board[i]===-1) continue;
+    let n=0;
+    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+      if(inBounds(r+dr,c+dc)&&board[idx(r+dr,c+dc)]===-1) n++;
+    }
+    board[i]=n;
+  }
+}
+
+// ── render single cell ───────────────────────────────────────────────────────
+function draw(i){
+  const el=grid.children[i]; if(!el) return;
+  if(vis[i]===2){ el.className='cell'; el.textContent='🚩'; return; }
+  if(vis[i]===0){ el.className='cell'; el.textContent='';   return; }
+  if(board[i]===-1){ el.className='cell open'; el.textContent='💣'; return; }
+  if(board[i]===0){  el.className='cell open'; el.textContent='';   return; }
+  el.className=`cell open n${board[i]}`; el.textContent=board[i];
+}
+
+// ── flood-fill BFS ───────────────────────────────────────────────────────────
+function flood(start){
+  const q=[start];
+  while(q.length){
+    const i=q.shift();
+    if(vis[i]!==0) continue;
+    vis[i]=1; draw(i);
+    if(board[i]===0){
+      const r=i/cfg.cols|0,c=i%cfg.cols;
+      for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+        if(!dr&&!dc) continue;
+        const nr=r+dr,nc=c+dc;
+        if(inBounds(nr,nc)&&vis[idx(nr,nc)]===0) q.push(idx(nr,nc));
+      }
+    }
+  }
+}
+
+// ── chord click (click revealed number) ─────────────────────────────────────
+function chord(i){
+  if(board[i]<=0) return;
+  const r=i/cfg.cols|0,c=i%cfg.cols;
+  let fc=0; const nb=[];
+  for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+    if(!dr&&!dc) continue;
+    const nr=r+dr,nc=c+dc;
+    if(inBounds(nr,nc)){ const ni=idx(nr,nc); nb.push(ni); if(vis[ni]===2) fc++; }
+  }
+  if(fc!==board[i]) return;
+  for(const ni of nb){
+    if(vis[ni]!==0) continue;
+    if(board[ni]===-1){ vis[ni]=1; draw(ni); grid.children[ni].classList.add('boom'); boom(); return; }
+    flood(ni);
+  }
+  checkWin();
+}
+
+// ── reveal ───────────────────────────────────────────────────────────────────
+function reveal(i){
+  if(phase==='won'||phase==='lost') return;
+  if(vis[i]===2) return;
+  if(vis[i]===1){ chord(i); return; }
+  if(phase==='idle'){
+    placeMines(i); phase='playing';
+    tickId=setInterval(()=>{ secs=Math.min(secs+1,999); lcdTime.textContent=pad(secs); },1000);
+  }
+  if(board[i]===-1){
+    vis[i]=1; draw(i); grid.children[i].classList.add('boom'); boom(); return;
+  }
+  flood(i); checkWin();
+}
+
+// ── flag ─────────────────────────────────────────────────────────────────────
+function flag(i){
+  if(phase==='won'||phase==='lost') return;
+  if(vis[i]===1) return;
+  vis[i]=vis[i]===2?0:2;
+  flagsLeft+=vis[i]===2?-1:1;
+  lcdMines.textContent=pad(flagsLeft);
+  draw(i);
+}
+
+// ── game over ─────────────────────────────────────────────────────────────────
+function boom(){
+  phase='lost'; face.textContent='😵';
+  clearInterval(tickId); tickId=null;
+  for(let i=0;i<board.length;i++){
+    if(board[i]===-1&&vis[i]===0){ vis[i]=1; draw(i); }
+    if(board[i]!==-1&&vis[i]===2){ grid.children[i].textContent='❌'; }
+  }
+  setTimeout(()=>{ ovTitle.textContent='💥 게임 오버!'; ovSub.textContent=`시간: ${secs}초`; overlay.classList.add('show'); },700);
+}
+
+// ── win check ─────────────────────────────────────────────────────────────────
+function checkWin(){
+  let hidden=0;
+  for(let i=0;i<vis.length;i++) if(vis[i]!==1) hidden++;
+  if(hidden===cfg.mines){
+    phase='won'; face.textContent='😎';
+    clearInterval(tickId); tickId=null;
+    setTimeout(()=>{ ovTitle.textContent='🎉 성공!'; ovSub.textContent=`시간: ${secs}초 · 지뢰 ${cfg.mines}개 제거!`; overlay.classList.add('show'); },300);
+  }
+}
+
+// ── touch long-press ─────────────────────────────────────────────────────────
+let lpTimer=null, lpFired=false, tX=0, tY=0;
+
+grid.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  lpFired=false;
+  const t=e.touches[0]; tX=t.clientX; tY=t.clientY;
+  const el=e.target.closest('.cell'); if(!el) return;
+  const i=+el.dataset.i;
+  lpTimer=setTimeout(()=>{ lpFired=true; if(navigator.vibrate) navigator.vibrate(30); flag(i); },480);
+},{passive:false});
+
+grid.addEventListener('touchmove', e=>{
+  e.preventDefault();
+  const t=e.touches[0];
+  if(Math.abs(t.clientX-tX)>9||Math.abs(t.clientY-tY)>9){ clearTimeout(lpTimer); lpFired=true; }
+},{passive:false});
+
+grid.addEventListener('touchend', e=>{
+  e.preventDefault();
+  clearTimeout(lpTimer);
+  if(!lpFired){ const el=e.target.closest('.cell'); if(el) reveal(+el.dataset.i); }
+},{passive:false});
+
+// ── mouse events ─────────────────────────────────────────────────────────────
+grid.addEventListener('click', e=>{
+  const el=e.target.closest('.cell'); if(!el) return;
+  reveal(+el.dataset.i);
+});
+grid.addEventListener('contextmenu', e=>{
+  e.preventDefault();
+  const el=e.target.closest('.cell'); if(!el) return;
+  flag(+el.dataset.i);
+});
+
+// ── UI controls ──────────────────────────────────────────────────────────────
+face.addEventListener('click', newGame);
+face.addEventListener('mousedown', ()=>{ if(phase==='playing') face.textContent='😮'; });
+
+document.querySelectorAll('.diff-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); lv=b.dataset.lv; newGame();
+  });
+});
+
+$('ov-retry').addEventListener('click',()=>{ overlay.classList.remove('show'); newGame(); });
+
+// ── start ────────────────────────────────────────────────────────────────────
+newGame();
+</script>
 </body>
 </html>
