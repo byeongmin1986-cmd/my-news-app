@@ -6,258 +6,206 @@
 <title>마을 지도</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0d2005;font-family:'Segoe UI',Arial,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:12px}
-h2{color:#c9a227;font-size:16px;margin-bottom:10px;letter-spacing:1px}
-
-/* MAP */
-.map{
-  position:relative;
-  width:min(400px,96vw);
-  height:min(400px,96vw);
-  background:
-    radial-gradient(ellipse 60% 40% at 30% 60%, #2a5a10 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 70% 30%, #1e4a0a 0%, transparent 60%),
-    linear-gradient(135deg,#1a3a08 0%,#0d2005 100%);
-  border:3px solid #8b6914;
-  border-radius:10px;
-  overflow:hidden;
-}
-
-/* Path lines (SVG behind everything) */
-.map svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
-
-/* Trees / decorations */
-.tree{position:absolute;font-size:22px;z-index:2;pointer-events:none}
-
-/* Building */
-.bldg{
-  position:absolute;transform:translate(-50%,-50%);
-  text-align:center;z-index:5;cursor:pointer;
-  transition:transform .15s;
-}
-.bldg:active{transform:translate(-50%,-50%) scale(1.25)}
-.bldg .ico{font-size:26px;display:block;filter:drop-shadow(0 2px 3px #000a)}
-.bldg .lbl{
-  font-size:9px;color:#fff;
-  background:rgba(0,0,0,.55);
-  padding:1px 5px;border-radius:10px;
-  white-space:nowrap;margin-top:2px;display:inline-block;
-}
-.bldg .lvl{font-size:9px;color:#c9a227;font-weight:bold}
-
-/* Worker */
-#worker{
-  position:absolute;
-  font-size:20px;
-  transform:translate(-50%,-50%);
-  z-index:10;
-  transition:left 1s cubic-bezier(.4,0,.2,1), top 1s cubic-bezier(.4,0,.2,1);
-  filter:drop-shadow(0 2px 3px #000c);
-}
-#worker.shake{animation:shake .25s ease infinite}
-@keyframes shake{0%,100%{transform:translate(-50%,-50%) rotate(-12deg)}50%{transform:translate(-50%,-50%) rotate(12deg)}}
-
-/* Floating text */
-.flt{
-  position:absolute;
-  transform:translate(-50%,-100%);
-  font-size:13px;font-weight:bold;
-  color:#fff;text-shadow:0 1px 3px #000;
-  pointer-events:none;z-index:20;
-  animation:floatUp 1.4s ease forwards;
-}
-@keyframes floatUp{0%{opacity:1;transform:translate(-50%,-100%)}100%{opacity:0;transform:translate(-50%,calc(-100% - 45px))}}
-
-/* Status bar */
-.status{
-  margin-top:10px;
-  background:#2d1b08;border:1px solid #8b6914;
-  border-radius:6px;padding:8px 14px;
-  color:#f5e6a3;font-size:12px;text-align:center;
-  width:min(400px,96vw);
-}
-.status b{color:#c9a227}
-
-/* Back button */
-.back{
-  margin-top:10px;
-  background:#6b4c1a;color:#c9a227;
-  border:none;border-radius:5px;
-  padding:8px 22px;font-size:13px;font-weight:bold;
-  cursor:pointer;font-family:inherit;
-}
+body{background:#0a1f04;font-family:'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
+#rbar{background:#1e0e02;border-bottom:2px solid #c9a227;padding:6px 10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.ri{color:#f5e6a3;font-size:11px}.ri b{color:#fff}
+#pop{margin-left:auto;color:#f5e6a3;font-size:11px}
+h2{text-align:center;color:#c9a227;font-size:14px;padding:6px 0}
+#map{position:relative;width:min(420px,98vw);margin:0 auto;
+  background:radial-gradient(ellipse at 40% 40%,#2a5a10,#0d2005 70%);
+  border:3px solid #8b6914;border-radius:10px;overflow:hidden}
+#map canvas{display:block}
+.b{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;transition:transform .2s}
+.b:active{transform:translate(-50%,-50%) scale(1.3)!important}
+.bi{display:block;transition:font-size .4s}
+.bn{font-size:9px;color:#fff;background:rgba(0,0,0,.6);padding:1px 4px;border-radius:8px;white-space:nowrap}
+.bl{font-size:9px;font-weight:bold;color:#c9a227}
+.b.hi .bi{filter:drop-shadow(0 0 6px #ffd700)}
+#worker{position:absolute;transform:translate(-50%,-50%);font-size:18px;z-index:20;
+  transition:left .9s cubic-bezier(.4,0,.2,1),top .9s cubic-bezier(.4,0,.2,1)}
+#worker.shake{animation:sk .25s infinite}
+@keyframes sk{0%,100%{transform:translate(-50%,-50%) rotate(-12deg)}50%{transform:translate(-50%,-50%) rotate(12deg)}}
+.ft{position:absolute;transform:translate(-50%,-100%);font-size:12px;font-weight:bold;
+  color:#ffe;text-shadow:0 1px 2px #000;pointer-events:none;z-index:30;
+  animation:fu 1.4s forwards}
+@keyframes fu{0%{opacity:1;transform:translate(-50%,-100%)}100%{opacity:0;transform:translate(-50%,calc(-100% - 44px))}}
+#st{margin:6px auto;width:min(420px,98vw);background:#1e0e02;border:1px solid #8b6914;
+  border-radius:6px;padding:7px 12px;color:#f5e6a3;font-size:11px;text-align:center}
+#st b{color:#c9a227}
+.back{display:block;margin:8px auto;width:min(420px,98vw);padding:9px;
+  background:#6b4c1a;color:#c9a227;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer}
+/* popup */
+.pb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+.pb.on{display:flex}
+.px{background:#f0e0b8;border:2px solid #c9a227;border-radius:8px;padding:18px;width:90%;max-width:300px}
+.px h3{font-size:14px;color:#3d2b0e;margin-bottom:6px}
+.px p{font-size:11px;color:#555;margin-bottom:8px}
+.cs{display:flex;gap:4px;margin-bottom:8px}
+.cs div{flex:1;text-align:center;background:#dfc99a;border-radius:4px;padding:4px}
+.cs .cl{font-size:9px;color:#666}.cs .cv{font-size:12px;font-weight:bold}
+.cv.r{color:#c00}.pt{font-size:10px;color:#666;margin-bottom:8px}
+.ub{width:100%;padding:9px;background:#6b4c1a;color:#c9a227;border:none;border-radius:4px;font-size:13px;font-weight:bold;cursor:pointer;margin-bottom:4px}
+.ub:disabled{background:#555;color:#888}
+.cb{width:100%;padding:8px;background:#444;color:#ccc;border:none;border-radius:4px;font-size:12px;cursor:pointer}
 </style>
 </head>
 <body>
-
-<h2>🏘️ 내 마을</h2>
-
-<div class="map" id="map">
-  <svg id="paths"></svg>
-
-  <!-- Trees -->
-  <span class="tree" style="left:4%;top:4%">🌳</span>
-  <span class="tree" style="left:88%;top:6%">🌲</span>
-  <span class="tree" style="left:90%;top:80%">🌳</span>
-  <span class="tree" style="left:3%;top:82%">🌲</span>
-  <span class="tree" style="left:48%;top:3%">🌿</span>
-  <span class="tree" style="left:55%;top:88%">🌿</span>
-
-  <!-- Worker (starts at warehouse center) -->
-  <div id="worker">👷</div>
+<div id="rbar">
+  <span class="ri">🌲 <b id="rw">-</b></span>
+  <span class="ri">🏺 <b id="rc">-</b></span>
+  <span class="ri">⛏️ <b id="ri">-</b></span>
+  <span id="pop">👥 -</span>
 </div>
-
-<div class="status" id="status">👷 장인이 마을을 둘러보고 있어요…</div>
-
-<button class="back" onclick="history.back()">← 마을로 돌아가기</button>
-
+<h2>🏘️ 내 마을</h2>
+<div id="map"><canvas id="cv"></canvas></div>
+<div id="st">장인이 마을을 순찰 중…</div>
+<button class="back" onclick="location.href='index.html'">← 마을 관리로 돌아가기</button>
+<div class="pb" id="popup">
+  <div class="px">
+    <h3 id="ph"></h3><p id="pd"></p>
+    <div class="cs" id="pc"></div>
+    <div class="pt" id="pt2"></div>
+    <button class="ub" id="pu">업그레이드</button>
+    <button class="cb" onclick="closePop()">닫기</button>
+  </div>
+</div>
 <script>
 'use strict';
+const B={hq:{n:'본부',b:{w:90,c:80,i:70},p:5,t:900,max:20},sawmill:{n:'목재소',b:{w:70,c:90,i:70},p:5,t:900,max:30},claypit:{n:'점토광산',b:{w:90,c:80,i:60},p:5,t:1e3,max:30},ironmine:{n:'철광산',b:{w:100,c:80,i:50},p:5,t:1100,max:30},warehouse:{n:'창고',b:{w:80,c:80,i:80},p:1,t:800,max:30},farm:{n:'농장',b:{w:45,c:40,i:30},p:5,t:700,max:30},barracks:{n:'막사',b:{w:200,c:170,i:90},p:7,t:3e3,max:25},wall:{n:'성벽',b:{w:50,c:100,i:20},p:5,t:2800,max:20}};
+const KEYS=['hq','sawmill','claypit','ironmine','warehouse','farm','barracks','wall'];
+// visuals by level tier: [0,1-3,4-7,8-14,15+]
+const V={hq:['🏗️','🏛️','🏯','🏰','👑🏰'],sawmill:['🌿','🌲','🌲🌲','🌲🌲🌲','🌳🌳🌳'],claypit:['🪨','🏺','🏺🏺','🏺🏺🏺','🏺🏺🏺🏺'],ironmine:['🪨','⛏️','⚒️⛏️','⚒️⚒️⛏️','⚒️⚒️⚒️⚒️'],warehouse:['🏗️','📦','📦📦','🏪','🏪🏪'],farm:['🌱','🌾','🌾🌾','🌾🌾🌾','🌾🌾🌾🌾'],barracks:['🏗️','⛺','🏕️','⚔️🏕️','⚔️⚔️🏕️'],wall:['🪨','🧱','🧱🧱','🏯','🏯🧱']};
+const POS={hq:{x:48,y:22},sawmill:{x:14,y:50},claypit:{x:78,y:18},ironmine:{x:80,y:68},warehouse:{x:48,y:52},farm:{x:18,y:28},barracks:{x:22,y:76},wall:{x:64,y:80}};
+const RK=['sawmill','claypit','ironmine'],RI={sawmill:'🪵',claypit:'🏺',ironmine:'⛏️'};
+const prod=l=>Math.floor(30*Math.pow(1.163,l)),store=l=>Math.floor(1e3*Math.pow(1.232,l)),fcap=l=>Math.floor(240*Math.pow(1.172,l));
+const bcost=(k,l)=>{const b=B[k].b,m=Math.pow(1.26,l-1);return{w:Math.ceil(b.w*m),c:Math.ceil(b.c*m),i:Math.ceil(b.i*m)};};
+const btime=(k,l,hq)=>Math.max(5,Math.floor(B[k].t*Math.pow(1.2,l-1)/(1+hq*.05)));
+const fmt=n=>Math.floor(n).toLocaleString('ko-KR');
+const fmtT=s=>{s=Math.max(0,s|0);const h=s/3600|0,m=(s%3600)/60|0,sec=s%60;return h?`${h}시간${m}분`:m?`${m}분${sec}초`:`${sec}초`;};
+function getV(k,lv){const v=V[k];if(!v)return'🏗️';if(lv===0)return v[0];const i=lv<4?1:lv<8?2:lv<15?3:4;return v[Math.min(i,v.length-1)];}
+function getSize(lv){return lv===0?20:lv<5?26:lv<10?32:lv<20?38:44;}
+function getGlow(lv){return lv>=15?'#ffd700':lv>=8?'#c9a227':lv>=4?'#8b6914':null;}
 
-// Building definitions & positions (% of map width/height)
-const BLDGS = [
-  {k:'hq',       e:'🏛️', n:'본부',     x:45, y:22},
-  {k:'sawmill',  e:'🌲', n:'목재소',   x:12, y:52},
-  {k:'claypit',  e:'🏺', n:'점토광산', x:76, y:20},
-  {k:'ironmine', e:'⛏️', n:'철광산',   x:78, y:68},
-  {k:'warehouse',e:'📦', n:'창고',     x:45, y:52},
-  {k:'farm',     e:'🌾', n:'농장',     x:18, y:28},
-  {k:'barracks', e:'⚔️', n:'막사',     x:24, y:76},
-  {k:'wall',     e:'🧱', n:'성벽',     x:62, y:82},
-];
+let G;
+function loadG(){try{const r=localStorage.getItem('tw_village');if(r){G=JSON.parse(r);const h=(Date.now()-G.savedAt)/36e5,mx=store(G.bldg.warehouse);G.res.w=Math.min(G.res.w+prod(G.bldg.sawmill)*h,mx);G.res.c=Math.min(G.res.c+prod(G.bldg.claypit)*h,mx);G.res.i=Math.min(G.res.i+prod(G.bldg.ironmine)*h,mx);if(G.bq&&Date.now()>=G.bq.at){G.bldg[G.bq.k]=G.bq.lv;G.bq=null;}return;}}catch(e){}G={savedAt:Date.now(),res:{w:500,c:500,i:500},bldg:{hq:1,sawmill:0,claypit:0,ironmine:0,warehouse:1,farm:1,barracks:0,wall:0},bq:null};}
+function saveG(){G.savedAt=Date.now();try{localStorage.setItem('tw_village',JSON.stringify(G));}catch(e){}}
 
-const RESOURCES = ['sawmill','claypit','ironmine'];
-const RES_ICON  = {sawmill:'🪵',claypit:'🏺',ironmine:'⛏️'};
-
-// Load game state from main game
-function getState() {
-  try {
-    const s = localStorage.getItem('tw_village');
-    return s ? JSON.parse(s) : null;
-  } catch(e){ return null; }
+// Canvas terrain
+const map=document.getElementById('map'),cvs=document.getElementById('cv'),ctx=cvs.getContext('2d');
+let W,H;
+function resize(){W=map.clientWidth;H=W;cvs.width=W;cvs.height=H;drawTerrain();}
+function drawTerrain(){
+  const g=ctx.createRadialGradient(W*.35,H*.4,0,W*.5,H*.5,W*.7);
+  g.addColorStop(0,'#3a6a18');g.addColorStop(.5,'#2a5210');g.addColorStop(1,'#1a3a08');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // paths from warehouse to resource buildings
+  ctx.setLineDash([5,6]);ctx.lineWidth=2;ctx.strokeStyle='rgba(200,160,80,.35)';
+  const wx=W*.48,wy=H*.52;
+  ['sawmill','claypit','ironmine'].forEach(k=>{
+    const p=POS[k];ctx.beginPath();ctx.moveTo(wx,wy);ctx.lineTo(W*p.x/100,H*p.y/100);ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  // some grass tufts
+  ctx.font='16px serif';
+  [[5,10],[90,12],[8,85],[88,82],[50,5],[52,90]].forEach(([x,y])=>{ctx.fillText('🌿',W*x/100,H*y/100);});
 }
 
-// Draw dashed paths from warehouse to resource buildings
-function drawPaths(state) {
-  const svg = document.getElementById('paths');
-  svg.innerHTML = '';
-  const wx = 45, wy = 52;
-  RESOURCES.forEach(k => {
-    const b = BLDGS.find(b=>b.k===k);
-    if (!b) return;
-    const lv = state ? (state.bldg[k]||0) : 0;
-    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1', wx+'%'); line.setAttribute('y1', wy+'%');
-    line.setAttribute('x2', b.x+'%'); line.setAttribute('y2', b.y+'%');
-    line.setAttribute('stroke', lv > 0 ? '#c9a22766' : '#ffffff22');
-    line.setAttribute('stroke-width','1.5');
-    line.setAttribute('stroke-dasharray','5,5');
-    svg.appendChild(line);
+// Building DOM elements
+function renderBuildings(){
+  map.querySelectorAll('.b').forEach(e=>e.remove());
+  KEYS.forEach(k=>{
+    const lv=G.bldg[k]||0,p=POS[k],v=getV(k,lv),sz=getSize(lv),glow=getGlow(lv);
+    const d=document.createElement('div');
+    d.className='b'+(lv>=8?' hi':'');
+    d.style.cssText=`left:${p.x}%;top:${p.y}%;`;
+    if(glow)d.style.filter=`drop-shadow(0 0 5px ${glow})`;
+    d.innerHTML=`<span class="bi" style="font-size:${sz}px">${v}</span><span class="bn">${B[k].n}${lv?' <span class="bl">Lv'+lv+'</span>':''}</span>`;
+    d.onclick=()=>openPop(k);
+    map.appendChild(d);
   });
 }
 
-// Render buildings on map
-function renderBuildings(state) {
-  document.querySelectorAll('.bldg').forEach(e=>e.remove());
-  const map = document.getElementById('map');
-  BLDGS.forEach(b => {
-    const lv = state ? (state.bldg[b.k]||0) : 0;
-    const el = document.createElement('div');
-    el.className = 'bldg';
-    el.style.left = b.x + '%';
-    el.style.top  = b.y + '%';
-    el.style.opacity = lv > 0 ? '1' : '0.3';
-    el.style.filter  = lv > 0 ? '' : 'grayscale(1)';
-    el.innerHTML = `<span class="ico">${b.e}</span><span class="lbl">${b.n}${lv?' <b class="lvl">Lv'+lv+'</b>':''}</span>`;
-    map.appendChild(el);
-  });
+// Worker
+let wX=48,wY=52,wPhase='idle',wIdx=0;
+function mkWorker(){const w=document.createElement('div');w.id='worker';w.textContent='👷';w.style.left=wX+'%';w.style.top=wY+'%';map.appendChild(w);return w;}
+function mvWorker(x,y){wX=x;wY=y;const w=document.getElementById('worker');if(w){w.style.left=x+'%';w.style.top=y+'%';}}
+function float(x,y,t){const el=document.createElement('div');el.className='ft';el.style.cssText=`left:${x}%;top:${y}%`;el.textContent=t;map.appendChild(el);setTimeout(()=>el.remove(),1500);}
+function setSt(m){document.getElementById('st').innerHTML=m;}
+function workerLoop(){
+  if(wPhase!=='idle')return;
+  const built=RK.filter(k=>(G.bldg[k]||0)>0);
+  if(!built.length){setSt('👷 <b>목재소</b>를 지으면 장인이 일을 시작해요!');setTimeout(workerLoop,3e3);return;}
+  const tgt=built[wIdx%built.length];wIdx++;wPhase='to';
+  const p=POS[tgt];setSt(`🚶 <b>${B[tgt].n}</b>으로 이동 중…`);mvWorker(p.x,p.y);
+  setTimeout(()=>{
+    wPhase='gather';const w=document.getElementById('worker');if(w)w.classList.add('shake');
+    setSt(`⛏️ <b>${B[tgt].n}</b>에서 자원 채취 중…`);
+    setTimeout(()=>{
+      if(w)w.classList.remove('shake');
+      const gained=Math.max(1,Math.floor(prod(G.bldg[tgt])/30));
+      float(p.x,p.y,RI[tgt]+' +'+gained);
+      wPhase='back';setSt(`📦 창고로 돌아가는 중…`);mvWorker(48,52);
+      setTimeout(()=>{float(48,52,'✅ 저장!');wPhase='idle';setTimeout(workerLoop,600);},1100);
+    },2200);
+  },1100);
 }
 
-// Floating resource popup
-function showFloat(x, y, text) {
-  const map = document.getElementById('map');
-  const el = document.createElement('div');
-  el.className = 'flt';
-  el.style.left = x + '%';
-  el.style.top  = y + '%';
-  el.textContent = text;
-  map.appendChild(el);
-  setTimeout(()=>el.remove(), 1500);
+// Resource bar
+function renderBar(){
+  const mx=store(G.bldg.warehouse);
+  document.getElementById('rw').textContent=fmt(G.res.w)+'/'+fmt(mx);
+  document.getElementById('rc').textContent=fmt(G.res.c)+'/'+fmt(mx);
+  document.getElementById('ri').textContent=fmt(G.res.i)+'/'+fmt(mx);
+  const pu=KEYS.reduce((s,k)=>s+(G.bldg[k]>0?B[k].p*(G.bldg[k]||0):0),0);
+  document.getElementById('pop').textContent=`👥 ${pu}/${fcap(G.bldg.farm)}`;
 }
 
-// Worker state machine
-let wX = 45, wY = 52;
-let wPhase = 'idle';
-let wJobIdx = 0;
-
-function setWorkerPos(x, y) {
-  wX = x; wY = y;
-  const w = document.getElementById('worker');
-  w.style.left = x + '%';
-  w.style.top  = y + '%';
+// Resource tick
+let last=Date.now();
+function tick(){
+  const now=Date.now(),dt=(now-last)/36e5;last=now;
+  const mx=store(G.bldg.warehouse);
+  G.res.w=Math.min(G.res.w+prod(G.bldg.sawmill)*dt,mx);
+  G.res.c=Math.min(G.res.c+prod(G.bldg.claypit)*dt,mx);
+  G.res.i=Math.min(G.res.i+prod(G.bldg.ironmine)*dt,mx);
+  if(G.bq&&now>=G.bq.at){G.bldg[G.bq.k]=G.bq.lv;G.bq=null;saveG();renderBuildings();}
+  renderBar();
 }
 
-function setStatus(msg) {
-  document.getElementById('status').innerHTML = msg;
-}
-
-function workerCycle() {
-  if (wPhase !== 'idle') return;
-
-  const state = getState();
-  const builtRes = RESOURCES.filter(k => !state || (state.bldg[k]||0) > 0);
-
-  // If no resource buildings, just idle-wander
-  if (builtRes.length === 0) {
-    setStatus('👷 <b>목재소/점토광산/철광산</b>을 지어야 장인이 일을 시작해요!');
-    setTimeout(workerCycle, 3000);
-    return;
+// Popup
+let ak=null;
+function openPop(k){
+  ak=k;const lv=G.bldg[k]||0,nl=lv+1;
+  document.getElementById('ph').textContent=`${getV(k,lv)} ${B[k].n} (Lv${lv})`;
+  document.getElementById('pd').textContent=nl>B[k].max?'최대 레벨 달성!':'업그레이드하면 어떻게 달라지나요?';
+  if(nl>B[k].max){document.getElementById('pc').innerHTML='';document.getElementById('pt2').textContent='';document.getElementById('pu').disabled=true;document.getElementById('pu').textContent='최대레벨';}
+  else{
+    const c=bcost(k,nl),t=btime(k,nl,G.bldg.hq);
+    const sw=G.res.w<c.w,sc=G.res.c<c.c,si=G.res.i<c.i;
+    document.getElementById('pc').innerHTML=`<div><div class="cl">🌲목재</div><div class="cv${sw?' r':''}">${fmt(c.w)}</div></div><div><div class="cl">🏺점토</div><div class="cv${sc?' r':''}">${fmt(c.c)}</div></div><div><div class="cl">⛏️철</div><div class="cv${si?' r':''}">${fmt(c.i)}</div></div>`;
+    document.getElementById('pt2').textContent=`건설: ${fmtT(t)} | 완성: ${getV(k,nl)} Lv${nl}`;
+    const ok=!G.bq&&!sw&&!sc&&!si;
+    document.getElementById('pu').disabled=!ok;
+    document.getElementById('pu').textContent=G.bq?'건설중…':`Lv${nl} 업그레이드`;
   }
-
-  const target = BLDGS.find(b => b.k === builtRes[wJobIdx % builtRes.length]);
-  wJobIdx++;
-  wPhase = 'walking_to';
-
-  setStatus(`👷 장인이 <b>${target.n}</b>(으)로 이동 중…`);
-  setWorkerPos(target.x, target.y);
-
-  setTimeout(() => {
-    // Arrived — start gathering
-    wPhase = 'gathering';
-    document.getElementById('worker').classList.add('shake');
-    setStatus(`⛏️ <b>${target.n}</b>에서 자원 채취 중…`);
-
-    setTimeout(() => {
-      document.getElementById('worker').classList.remove('shake');
-
-      // Show floating text
-      const lv = state ? (state.bldg[target.k]||0) : 1;
-      const gained = Math.max(1, Math.floor(30 * Math.pow(1.163, lv) / 30));
-      showFloat(target.x, target.y, RES_ICON[target.k] + ' +' + gained);
-
-      // Walk back to warehouse
-      wPhase = 'walking_back';
-      setStatus(`👷 장인이 <b>창고</b>로 돌아가는 중…`);
-      setWorkerPos(45, 52);
-
-      setTimeout(() => {
-        showFloat(45, 52, '✅ 저장 완료!');
-        setStatus('👷 장인이 다음 작업을 준비 중…');
-        wPhase = 'idle';
-        setTimeout(workerCycle, 800);
-      }, 1100);
-    }, 2200);
-  }, 1100);
+  document.getElementById('popup').classList.add('on');
 }
+function closePop(){document.getElementById('popup').classList.remove('on');ak=null;}
+document.getElementById('pu').onclick=()=>{
+  if(!ak)return;const lv=G.bldg[ak]||0,nl=lv+1;
+  if(G.bq){alert('건설중!');return;}
+  const c=bcost(ak,nl);
+  if(G.res.w<c.w||G.res.c<c.c||G.res.i<c.i){alert('자원 부족!');return;}
+  G.res.w-=c.w;G.res.c-=c.c;G.res.i-=c.i;
+  G.bq={k:ak,lv:nl,at:Date.now()+btime(ak,nl,G.bldg.hq)*1e3};
+  saveG();closePop();renderBuildings();
+};
+document.getElementById('popup').onclick=e=>{if(e.target===document.getElementById('popup'))closePop();};
 
-// Init
-const state = getState();
-drawPaths(state);
-renderBuildings(state);
-setWorkerPos(45, 52);
-
-// Start worker after short delay
-setTimeout(workerCycle, 1200);
+window.addEventListener('resize',()=>{resize();renderBuildings();});
+loadG();resize();renderBuildings();mkWorker();renderBar();
+setInterval(tick,1000);setInterval(saveG,20000);
+setTimeout(workerLoop,1200);
 </script>
 </body>
 </html>
