@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>마을 지도</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d2005;font-family:'Segoe UI',Arial,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:12px}
+h2{color:#c9a227;font-size:16px;margin-bottom:10px;letter-spacing:1px}
+
+/* MAP */
+.map{
+  position:relative;
+  width:min(400px,96vw);
+  height:min(400px,96vw);
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 60%, #2a5a10 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 70% 30%, #1e4a0a 0%, transparent 60%),
+    linear-gradient(135deg,#1a3a08 0%,#0d2005 100%);
+  border:3px solid #8b6914;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+/* Path lines (SVG behind everything) */
+.map svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+
+/* Trees / decorations */
+.tree{position:absolute;font-size:22px;z-index:2;pointer-events:none}
+
+/* Building */
+.bldg{
+  position:absolute;transform:translate(-50%,-50%);
+  text-align:center;z-index:5;cursor:pointer;
+  transition:transform .15s;
+}
+.bldg:active{transform:translate(-50%,-50%) scale(1.25)}
+.bldg .ico{font-size:26px;display:block;filter:drop-shadow(0 2px 3px #000a)}
+.bldg .lbl{
+  font-size:9px;color:#fff;
+  background:rgba(0,0,0,.55);
+  padding:1px 5px;border-radius:10px;
+  white-space:nowrap;margin-top:2px;display:inline-block;
+}
+.bldg .lvl{font-size:9px;color:#c9a227;font-weight:bold}
+
+/* Worker */
+#worker{
+  position:absolute;
+  font-size:20px;
+  transform:translate(-50%,-50%);
+  z-index:10;
+  transition:left 1s cubic-bezier(.4,0,.2,1), top 1s cubic-bezier(.4,0,.2,1);
+  filter:drop-shadow(0 2px 3px #000c);
+}
+#worker.shake{animation:shake .25s ease infinite}
+@keyframes shake{0%,100%{transform:translate(-50%,-50%) rotate(-12deg)}50%{transform:translate(-50%,-50%) rotate(12deg)}}
+
+/* Floating text */
+.flt{
+  position:absolute;
+  transform:translate(-50%,-100%);
+  font-size:13px;font-weight:bold;
+  color:#fff;text-shadow:0 1px 3px #000;
+  pointer-events:none;z-index:20;
+  animation:floatUp 1.4s ease forwards;
+}
+@keyframes floatUp{0%{opacity:1;transform:translate(-50%,-100%)}100%{opacity:0;transform:translate(-50%,calc(-100% - 45px))}}
+
+/* Status bar */
+.status{
+  margin-top:10px;
+  background:#2d1b08;border:1px solid #8b6914;
+  border-radius:6px;padding:8px 14px;
+  color:#f5e6a3;font-size:12px;text-align:center;
+  width:min(400px,96vw);
+}
+.status b{color:#c9a227}
+
+/* Back button */
+.back{
+  margin-top:10px;
+  background:#6b4c1a;color:#c9a227;
+  border:none;border-radius:5px;
+  padding:8px 22px;font-size:13px;font-weight:bold;
+  cursor:pointer;font-family:inherit;
+}
+</style>
+</head>
+<body>
+
+<h2>🏘️ 내 마을</h2>
+
+<div class="map" id="map">
+  <svg id="paths"></svg>
+
+  <!-- Trees -->
+  <span class="tree" style="left:4%;top:4%">🌳</span>
+  <span class="tree" style="left:88%;top:6%">🌲</span>
+  <span class="tree" style="left:90%;top:80%">🌳</span>
+  <span class="tree" style="left:3%;top:82%">🌲</span>
+  <span class="tree" style="left:48%;top:3%">🌿</span>
+  <span class="tree" style="left:55%;top:88%">🌿</span>
+
+  <!-- Worker (starts at warehouse center) -->
+  <div id="worker">👷</div>
+</div>
+
+<div class="status" id="status">👷 장인이 마을을 둘러보고 있어요…</div>
+
+<button class="back" onclick="history.back()">← 마을로 돌아가기</button>
+
+<script>
+'use strict';
+
+// Building definitions & positions (% of map width/height)
+const BLDGS = [
+  {k:'hq',       e:'🏛️', n:'본부',     x:45, y:22},
+  {k:'sawmill',  e:'🌲', n:'목재소',   x:12, y:52},
+  {k:'claypit',  e:'🏺', n:'점토광산', x:76, y:20},
+  {k:'ironmine', e:'⛏️', n:'철광산',   x:78, y:68},
+  {k:'warehouse',e:'📦', n:'창고',     x:45, y:52},
+  {k:'farm',     e:'🌾', n:'농장',     x:18, y:28},
+  {k:'barracks', e:'⚔️', n:'막사',     x:24, y:76},
+  {k:'wall',     e:'🧱', n:'성벽',     x:62, y:82},
+];
+
+const RESOURCES = ['sawmill','claypit','ironmine'];
+const RES_ICON  = {sawmill:'🪵',claypit:'🏺',ironmine:'⛏️'};
+
+// Load game state from main game
+function getState() {
+  try {
+    const s = localStorage.getItem('tw_village');
+    return s ? JSON.parse(s) : null;
+  } catch(e){ return null; }
+}
+
+// Draw dashed paths from warehouse to resource buildings
+function drawPaths(state) {
+  const svg = document.getElementById('paths');
+  svg.innerHTML = '';
+  const wx = 45, wy = 52;
+  RESOURCES.forEach(k => {
+    const b = BLDGS.find(b=>b.k===k);
+    if (!b) return;
+    const lv = state ? (state.bldg[k]||0) : 0;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', wx+'%'); line.setAttribute('y1', wy+'%');
+    line.setAttribute('x2', b.x+'%'); line.setAttribute('y2', b.y+'%');
+    line.setAttribute('stroke', lv > 0 ? '#c9a22766' : '#ffffff22');
+    line.setAttribute('stroke-width','1.5');
+    line.setAttribute('stroke-dasharray','5,5');
+    svg.appendChild(line);
+  });
+}
+
+// Render buildings on map
+function renderBuildings(state) {
+  document.querySelectorAll('.bldg').forEach(e=>e.remove());
+  const map = document.getElementById('map');
+  BLDGS.forEach(b => {
+    const lv = state ? (state.bldg[b.k]||0) : 0;
+    const el = document.createElement('div');
+    el.className = 'bldg';
+    el.style.left = b.x + '%';
+    el.style.top  = b.y + '%';
+    el.style.opacity = lv > 0 ? '1' : '0.3';
+    el.style.filter  = lv > 0 ? '' : 'grayscale(1)';
+    el.innerHTML = `<span class="ico">${b.e}</span><span class="lbl">${b.n}${lv?' <b class="lvl">Lv'+lv+'</b>':''}</span>`;
+    map.appendChild(el);
+  });
+}
+
+// Floating resource popup
+function showFloat(x, y, text) {
+  const map = document.getElementById('map');
+  const el = document.createElement('div');
+  el.className = 'flt';
+  el.style.left = x + '%';
+  el.style.top  = y + '%';
+  el.textContent = text;
+  map.appendChild(el);
+  setTimeout(()=>el.remove(), 1500);
+}
+
+// Worker state machine
+let wX = 45, wY = 52;
+let wPhase = 'idle';
+let wJobIdx = 0;
+
+function setWorkerPos(x, y) {
+  wX = x; wY = y;
+  const w = document.getElementById('worker');
+  w.style.left = x + '%';
+  w.style.top  = y + '%';
+}
+
+function setStatus(msg) {
+  document.getElementById('status').innerHTML = msg;
+}
+
+function workerCycle() {
+  if (wPhase !== 'idle') return;
+
+  const state = getState();
+  const builtRes = RESOURCES.filter(k => !state || (state.bldg[k]||0) > 0);
+
+  // If no resource buildings, just idle-wander
+  if (builtRes.length === 0) {
+    setStatus('👷 <b>목재소/점토광산/철광산</b>을 지어야 장인이 일을 시작해요!');
+    setTimeout(workerCycle, 3000);
+    return;
+  }
+
+  const target = BLDGS.find(b => b.k === builtRes[wJobIdx % builtRes.length]);
+  wJobIdx++;
+  wPhase = 'walking_to';
+
+  setStatus(`👷 장인이 <b>${target.n}</b>(으)로 이동 중…`);
+  setWorkerPos(target.x, target.y);
+
+  setTimeout(() => {
+    // Arrived — start gathering
+    wPhase = 'gathering';
+    document.getElementById('worker').classList.add('shake');
+    setStatus(`⛏️ <b>${target.n}</b>에서 자원 채취 중…`);
+
+    setTimeout(() => {
+      document.getElementById('worker').classList.remove('shake');
+
+      // Show floating text
+      const lv = state ? (state.bldg[target.k]||0) : 1;
+      const gained = Math.max(1, Math.floor(30 * Math.pow(1.163, lv) / 30));
+      showFloat(target.x, target.y, RES_ICON[target.k] + ' +' + gained);
+
+      // Walk back to warehouse
+      wPhase = 'walking_back';
+      setStatus(`👷 장인이 <b>창고</b>로 돌아가는 중…`);
+      setWorkerPos(45, 52);
+
+      setTimeout(() => {
+        showFloat(45, 52, '✅ 저장 완료!');
+        setStatus('👷 장인이 다음 작업을 준비 중…');
+        wPhase = 'idle';
+        setTimeout(workerCycle, 800);
+      }, 1100);
+    }, 2200);
+  }, 1100);
+}
+
+// Init
+const state = getState();
+drawPaths(state);
+renderBuildings(state);
+setWorkerPos(45, 52);
+
+// Start worker after short delay
+setTimeout(workerCycle, 1200);
+</script>
+</body>
+</html>
