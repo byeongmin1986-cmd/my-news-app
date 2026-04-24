@@ -5,187 +5,262 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>부족 마을</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{--bg:#1a0e05;--bar:#2d1b08;--panel:#f0e0b8;--pdark:#dfc99a;--border:#8b6914;--gold:#c9a227;--dark:#3d2b0e;--light:#f5e6a3;--btn:#6b4c1a;--green:#3a7a1a;--red:#9b1c1c}
-body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh;user-select:none}
-#rbar{position:fixed;top:0;left:0;right:0;z-index:99;background:var(--bar);border-bottom:2px solid var(--gold);padding:7px 10px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
-.ri{color:var(--light);font-size:12px;display:flex;align-items:center;gap:3px}
-.ri b{min-width:55px;font-size:13px}.ri small{color:#aaa;font-size:10px}
-#pop{margin-left:auto;color:var(--light);font-size:12px}
-#nav{position:fixed;top:42px;left:0;right:0;z-index:98;background:var(--bar);border-bottom:2px solid var(--gold);display:flex}
-.nb{flex:1;padding:7px 4px;text-align:center;color:#999;font-size:12px;font-weight:bold;background:none;border:none;font-family:inherit;cursor:pointer}
-.nb.on{color:var(--gold);border-bottom:2px solid var(--gold)}
-#main{margin-top:84px;padding:10px}
-#bq{background:var(--bar);border:2px solid var(--gold);border-radius:6px;padding:9px 12px;margin-bottom:10px;font-size:12px;color:var(--light);display:none}
-.bqrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.bqrow b{color:var(--gold)}
-.pbar{background:#333;border-radius:4px;height:7px;overflow:hidden}
-.pbfill{background:linear-gradient(90deg,#8b6914,#ffd700);height:100%;border-radius:4px;transition:width .9s linear}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#1a0e05;font-family:sans-serif;padding-top:80px;user-select:none}
+#rbar{position:fixed;top:0;left:0;right:0;background:#2d1b08;border-bottom:2px solid #c9a227;padding:7px 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;z-index:99}
+.ri{color:#f5e6a3;font-size:12px}
+#rpop{margin-left:auto;color:#f5e6a3;font-size:11px}
+#nav{position:fixed;top:42px;left:0;right:0;background:#2d1b08;border-bottom:2px solid #c9a227;display:flex;z-index:98}
+.nb{flex:1;padding:7px 4px;text-align:center;color:#888;font-size:12px;font-weight:bold;background:none;border:none;cursor:pointer}
+.nb.on{color:#c9a227;border-bottom:2px solid #c9a227}
+#main{padding:10px}
+#bq{display:none;background:#2d1b08;border:2px solid #c9a227;border-radius:6px;padding:10px 12px;margin-bottom:10px}
+.bqrow{display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:#f5e6a3}
+.bqrow b{color:#c9a227}
+.bar{background:#444;border-radius:4px;height:8px;overflow:hidden}
+.barf{background:linear-gradient(to right,#8b6914,#ffd700);height:100%;border-radius:4px;transition:width 1s linear}
 .bgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-@media(min-width:450px){.bgrid{grid-template-columns:repeat(4,1fr)}}
-.btile{background:var(--pdark);border:2px solid var(--border);border-radius:5px;padding:10px 6px;text-align:center;cursor:pointer;position:relative;transition:filter .15s;overflow:hidden}
-.btile:active{filter:brightness(1.15)}
-.btile .icon{font-size:30px;display:block}
-.btile .bname{font-size:11px;font-weight:bold;color:var(--dark);margin-top:3px}
-.btile .blv{display:inline-block;background:var(--btn);color:var(--gold);font-size:10px;font-weight:bold;padding:1px 6px;border-radius:3px;margin-top:3px}
-.building-badge{position:absolute;top:3px;right:3px;background:var(--green);color:#fff;font-size:9px;padding:1px 4px;border-radius:3px;animation:blink 1s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
-.tile-pb{position:absolute;bottom:0;left:0;right:0;height:4px;background:#333}
-.tile-pbf{height:100%;background:linear-gradient(90deg,#8b6914,#ffd700);transition:width .9s linear}
-.pbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center}
-.pbg.on{display:flex}
-.pbox{background:var(--panel);border:2px solid var(--gold);border-radius:6px;padding:20px;width:90%;max-width:320px}
-.ptitle{font-size:15px;font-weight:bold;color:var(--dark);margin-bottom:8px}
-.pdesc{font-size:12px;color:#666;margin-bottom:10px}
-.costs{display:flex;gap:6px;background:var(--pdark);padding:8px;border-radius:4px;margin-bottom:8px}
-.ci{flex:1;text-align:center}.ci .cl{font-size:10px;color:#888}.ci .cv{font-size:13px;font-weight:bold}
-.cv.red{color:var(--red)}
-.ptime{font-size:11px;color:#666;margin-bottom:8px}
-.pop-pb{background:#ccc;border-radius:5px;height:12px;overflow:hidden;margin-bottom:6px}
-.pop-pbf{background:linear-gradient(90deg,#8b6914,#ffd700);height:100%;border-radius:5px;transition:width .9s linear}
-.pop-pb-lbl{text-align:center;font-size:11px;color:#555;margin-bottom:10px;font-weight:bold}
-.btn{width:100%;padding:10px;font-size:14px;font-weight:bold;background:var(--btn);color:var(--gold);border:none;border-radius:4px;cursor:pointer;font-family:inherit;margin-bottom:6px}
-.btn:disabled{background:#555;color:#888;cursor:not-allowed}
-.btn-close{background:#444;color:#ccc}
-.info-card{background:var(--panel);border:2px solid var(--border);border-radius:5px;padding:12px;margin-bottom:8px}
-.info-title{font-size:13px;font-weight:bold;color:var(--dark);margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:4px}
-.irow{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--dark)}
-.irow span{color:#555}
-.map-card{background:linear-gradient(135deg,#1a3a08,#0d2005);border:2px solid var(--gold);border-radius:8px;padding:20px;text-align:center;margin-bottom:10px;cursor:pointer;text-decoration:none;display:block;transition:filter .15s}
-.map-card:active{filter:brightness(1.2)}
-.map-card .mc-icon{font-size:48px;display:block;margin-bottom:8px}
-.map-card .mc-title{color:var(--gold);font-size:16px;font-weight:bold;margin-bottom:4px}
-.map-card .mc-desc{color:#aaa;font-size:12px}
+@media(min-width:420px){.bgrid{grid-template-columns:repeat(4,1fr)}}
+.tile{background:#dfc99a;border:2px solid #8b6914;border-radius:6px;padding:10px 6px;text-align:center;cursor:pointer;position:relative;overflow:hidden}
+.tile .ico{font-size:28px;display:block}
+.tile .nm{font-size:11px;font-weight:bold;color:#3d2b0e;margin-top:3px}
+.tile .lv{display:inline-block;background:#6b4c1a;color:#c9a227;font-size:10px;padding:1px 6px;border-radius:3px;margin-top:3px;font-weight:bold}
+.tile .bdg{position:absolute;top:3px;right:3px;background:#3a7a1a;color:#fff;font-size:9px;padding:1px 4px;border-radius:3px;animation:bk 1s infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.4}}
+.tile .tbar{position:absolute;bottom:0;left:0;right:0;height:4px;background:#555}
+.tile .tbarf{height:100%;background:linear-gradient(to right,#8b6914,#ffd700);transition:width 1s linear}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center}
+.ov.on{display:flex}
+.box{background:#f0e0b8;border:2px solid #c9a227;border-radius:8px;padding:18px;width:90%;max-width:310px}
+.bh{font-size:14px;font-weight:bold;color:#3d2b0e;margin-bottom:8px}
+.bd{font-size:11px;color:#666;margin-bottom:8px}
+.costs{display:flex;gap:6px;margin-bottom:8px;background:#dfc99a;padding:8px;border-radius:4px}
+.ci{flex:1;text-align:center}
+.cl{font-size:9px;color:#888}
+.cv{font-size:12px;font-weight:bold}
+.cv.r{color:#c00}
+.bt2{font-size:11px;color:#555;margin-bottom:8px}
+.ppw{display:none;margin-bottom:10px}
+.pplb{font-size:11px;color:#555;text-align:center;margin-bottom:5px;font-weight:bold}
+.ppbar{background:#ccc;border-radius:5px;height:13px;overflow:hidden}
+.ppbarf{background:linear-gradient(to right,#8b6914,#ffd700);height:100%;border-radius:5px;transition:width 1s linear}
+.btn{width:100%;padding:10px;font-size:13px;font-weight:bold;background:#6b4c1a;color:#c9a227;border:none;border-radius:5px;cursor:pointer;margin-bottom:5px}
+.btn:disabled{background:#666;color:#aaa;cursor:not-allowed}
+.btn2{width:100%;padding:8px;font-size:12px;background:#444;color:#ccc;border:none;border-radius:5px;cursor:pointer}
+.mc{background:linear-gradient(135deg,#1a3a08,#0d2005);border:2px solid #c9a227;border-radius:8px;padding:20px;text-align:center;text-decoration:none;display:block}
+.mi{font-size:44px;display:block;margin-bottom:8px}
+.mt{color:#c9a227;font-size:15px;font-weight:bold;margin-bottom:4px}
+.md{color:#aaa;font-size:12px}
+.ic{background:#f0e0b8;border:2px solid #8b6914;border-radius:5px;padding:12px;margin-bottom:8px}
+.ih{font-size:13px;font-weight:bold;color:#3d2b0e;margin-bottom:6px;border-bottom:1px solid #8b6914;padding-bottom:4px}
+.ir{display:flex;justify-content:space-between;font-size:12px;padding:2px 0;color:#3d2b0e}
+.ir span{color:#666}
 </style>
 </head>
 <body>
 <div id="rbar">
-  <span class="ri">🌲 <b id="rw">0</b><small id="rrw"></small></span>
-  <span class="ri">🏺 <b id="rc">0</b><small id="rrc"></small></span>
-  <span class="ri">⛏️ <b id="ri2">0</b><small id="rri"></small></span>
-  <span id="pop">👥 0/0</span>
+  <span class="ri">🌲 <span id="rw">-</span></span>
+  <span class="ri">🏺 <span id="rc">-</span></span>
+  <span class="ri">⛏️ <span id="ri2">-</span></span>
+  <span id="rpop">👥 -</span>
 </div>
 <nav id="nav">
-  <button class="nb on" data-t="village">🏘️ 마을</button>
-  <button class="nb" data-t="map">🗺️ 지도</button>
-  <button class="nb" data-t="info">📊 정보</button>
+  <button class="nb on" data-tab="v">🏘️ 마을</button>
+  <button class="nb" data-tab="m">🗺️ 지도</button>
+  <button class="nb" data-tab="i">📊 정보</button>
 </nav>
 <div id="main">
-  <div id="bq"></div>
-  <div class="bgrid" id="bgrid"></div>
-  <div id="tab-map" style="display:none">
-    <a class="map-card" href="map.html">
-      <span class="mc-icon">🗺️</span>
-      <div class="mc-title">마을 지도 보기</div>
-      <div class="mc-desc">장인이 자원을 채취하고 건물을 짓는 모습을 확인하세요 👷</div>
-    </a>
+  <div id="bq">
+    <div class="bqrow">
+      <span>🔨 <b id="bqn">-</b> 건설 중</span>
+      <b id="bqt">-</b>
+    </div>
+    <div class="bar"><div class="barf" id="bqf" style="width:0%"></div></div>
   </div>
-  <div id="info-tab" style="display:none"></div>
+  <div class="bgrid" id="bgrid"></div>
+  <div id="tab-m" style="display:none">
+    <a class="mc" href="map.html"><span class="mi">🗺️</span><div class="mt">마을 지도 보기</div><div class="md">장인이 자원을 채취합니다 👷</div></a>
+  </div>
+  <div id="tab-i" style="display:none"></div>
 </div>
-<div class="pbg" id="popup">
-  <div class="pbox">
-    <div class="ptitle" id="pt"></div>
-    <div class="pdesc" id="pd"></div>
+<div class="ov" id="ov">
+  <div class="box">
+    <div class="bh" id="ph"></div>
+    <div class="bd" id="pd"></div>
     <div class="costs" id="pc"></div>
-    <div class="ptime" id="ptm"></div>
-    <div class="pop-pb" id="ppbar" style="display:none"><div class="pop-pbf" id="ppbarf" style="width:0%"></div></div>
-    <div class="pop-pb-lbl" id="ppbarlbl"></div>
+    <div class="bt2" id="ptm"></div>
+    <div class="ppw" id="ppw">
+      <div class="pplb" id="pplb"></div>
+      <div class="ppbar"><div class="ppbarf" id="ppbarf" style="width:0%"></div></div>
+    </div>
     <button class="btn" id="pbtn">업그레이드</button>
-    <button class="btn btn-close" id="pclose">닫기</button>
+    <button class="btn2" onclick="closeP()">닫기</button>
   </div>
 </div>
 <script>
 'use strict';
-const B={hq:{n:'본부',e:'🏛️',b:{w:90,c:80,i:70},p:5,t:900,max:20,d:'건설 속도 +5%/레벨'},sawmill:{n:'목재소',e:'🌲',b:{w:70,c:90,i:70},p:5,t:900,max:30,d:'목재 생산 증가'},claypit:{n:'점토광산',e:'🏺',b:{w:90,c:80,i:60},p:5,t:1000,max:30,d:'점토 생산 증가'},ironmine:{n:'철광산',e:'⛏️',b:{w:100,c:80,i:50},p:5,t:1100,max:30,d:'철 생산 증가'},warehouse:{n:'창고',e:'📦',b:{w:80,c:80,i:80},p:1,t:800,max:30,d:'자원 최대 저장량 증가'},farm:{n:'농장',e:'🌾',b:{w:45,c:40,i:30},p:5,t:700,max:30,d:'인구 최대치 증가'},barracks:{n:'막사',e:'⚔️',b:{w:200,c:170,i:90},p:7,t:3000,max:25,d:'병력 훈련 (추후 구현)'},wall:{n:'성벽',e:'🧱',b:{w:50,c:100,i:20},p:5,t:2800,max:20,d:'방어력 증가 (추후 구현)'}};
-const KEYS=['hq','sawmill','claypit','ironmine','warehouse','farm','barracks','wall'];
-const prod=lv=>Math.floor(30*Math.pow(1.163,lv));
-const store=lv=>Math.floor(1000*Math.pow(1.232,lv));
-const fcap=lv=>Math.floor(240*Math.pow(1.172,lv));
-const bcost=(k,lv)=>{const b=B[k].b,m=Math.pow(1.26,lv-1);return{w:Math.ceil(b.w*m),c:Math.ceil(b.c*m),i:Math.ceil(b.i*m)};};
-const btime=(k,lv,hqLv)=>Math.max(5,Math.floor(B[k].t*Math.pow(1.2,lv-1)/(1+hqLv*0.05)));
-const fmt=n=>Math.floor(n).toLocaleString('ko-KR');
-const fmtT=s=>{s=Math.max(0,s|0);const h=s/3600|0,m=(s%3600)/60|0,sc=s%60;return h?`${h}시간 ${m}분`:m?`${m}분 ${sc}초`:`${sc}초`;};
-const popUsed=bldg=>KEYS.reduce((s,k)=>s+(bldg[k]>0?B[k].p*bldg[k]:0),0);
-function bqPct(){if(!G.bq)return 0;const tot=btime(G.bq.k,G.bq.lv,G.bldg.hq);const rem=Math.max(0,(G.bq.at-Date.now())/1000);return Math.min(100,Math.round((1-rem/tot)*100));}
-let G;
-function def(){return{savedAt:Date.now(),res:{w:500,c:500,i:500},bldg:{hq:1,sawmill:0,claypit:0,ironmine:0,warehouse:1,farm:1,barracks:0,wall:0},bq:null};}
-function load(){try{const r=localStorage.getItem('tw_village');if(r){G=JSON.parse(r);const hrs=(Date.now()-G.savedAt)/3600000,mx=store(G.bldg.warehouse);G.res.w=Math.min(G.res.w+prod(G.bldg.sawmill)*hrs,mx);G.res.c=Math.min(G.res.c+prod(G.bldg.claypit)*hrs,mx);G.res.i=Math.min(G.res.i+prod(G.bldg.ironmine)*hrs,mx);if(G.bq&&Date.now()>=G.bq.at){G.bldg[G.bq.k]=G.bq.lv;G.bq=null;}return;}}catch(e){}G=def();}
-function save(){G.savedAt=Date.now();try{localStorage.setItem('tw_village',JSON.stringify(G));}catch(e){}}
-function upgrade(k){if(G.bq){alert('건설 중인 건물이 있습니다!');return;}const lv=G.bldg[k]||0,nl=lv+1;if(nl>B[k].max){alert('최대 레벨입니다!');return;}const c=bcost(k,nl);if(G.res.w<c.w||G.res.c<c.c||G.res.i<c.i){alert('자원이 부족합니다!');return;}G.res.w-=c.w;G.res.c-=c.c;G.res.i-=c.i;G.bq={k,lv:nl,at:Date.now()+btime(k,nl,G.bldg.hq)*1000};save();closePopup();renderVillage();}
-function renderBar(){const mx=store(G.bldg.warehouse),pw=prod(G.bldg.sawmill),pc=prod(G.bldg.claypit),pi=prod(G.bldg.ironmine);document.getElementById('rw').textContent=fmt(G.res.w)+'/'+fmt(mx);document.getElementById('rc').textContent=fmt(G.res.c)+'/'+fmt(mx);document.getElementById('ri2').textContent=fmt(G.res.i)+'/'+fmt(mx);document.getElementById('rrw').textContent=pw?` +${pw}/h`:'';document.getElementById('rrc').textContent=pc?` +${pc}/h`:'';document.getElementById('rri').textContent=pi?` +${pi}/h`:'';document.getElementById('pop').textContent=`👥 ${popUsed(G.bldg)}/${fcap(G.bldg.farm)}`;}
-function renderVillage(){
-  const bqEl=document.getElementById('bq');
-  if(G.bq){
-    const sec=Math.max(0,Math.ceil((G.bq.at-Date.now())/1000));
-    const pct=bqPct();
-    bqEl.style.display='';
-    bqEl.innerHTML=`<div class="bqrow"><span>🔨 <b>${B[G.bq.k].n}</b> Lv${G.bq.lv} 건설 중</span><b id="bqt">${fmtT(sec)}</b></div><div class="pbar"><div class="pbfill" id="bqpf" style="width:${pct}%"></div></div>`;
-  }else bqEl.style.display='none';
-  const g=document.getElementById('bgrid');g.innerHTML='';
-  KEYS.forEach(k=>{
-    const lv=G.bldg[k]||0,isBQ=G.bq&&G.bq.k===k,pct=isBQ?bqPct():0;
-    const d=document.createElement('div');d.className='btile';
-    d.innerHTML=`<span class="icon">${B[k].e}</span><div class="bname">${B[k].n}</div><span class="blv">${lv?'Lv '+lv:'미건설'}</span>`+(isBQ?`<span class="building-badge">건설중</span><div class="tile-pb"><div class="tile-pbf" id="tpf-${k}" style="width:${pct}%"></div></div>`:'');
-    d.onclick=()=>openPopup(k);g.appendChild(d);
+var B={hq:{n:'본부',e:'🏛️',b:{w:90,c:80,i:70},p:5,t:900,max:20,d:'건설 속도 +5%/레벨'},sawmill:{n:'목재소',e:'🌲',b:{w:70,c:90,i:70},p:5,t:900,max:30,d:'목재 생산 증가'},claypit:{n:'점토광산',e:'🏺',b:{w:90,c:80,i:60},p:5,t:1000,max:30,d:'점토 생산 증가'},ironmine:{n:'철광산',e:'⛏️',b:{w:100,c:80,i:50},p:5,t:1100,max:30,d:'철 생산 증가'},warehouse:{n:'창고',e:'📦',b:{w:80,c:80,i:80},p:1,t:800,max:30,d:'저장량 증가'},farm:{n:'농장',e:'🌾',b:{w:45,c:40,i:30},p:5,t:700,max:30,d:'인구 최대 증가'},barracks:{n:'막사',e:'⚔️',b:{w:200,c:170,i:90},p:7,t:3000,max:25,d:'병력 (추후)'},wall:{n:'성벽',e:'🧱',b:{w:50,c:100,i:20},p:5,t:2800,max:20,d:'방어 (추후)'}};
+var KEYS=['hq','sawmill','claypit','ironmine','warehouse','farm','barracks','wall'];
+function prod(l){return Math.floor(30*Math.pow(1.163,l));}
+function store(l){return Math.floor(1000*Math.pow(1.232,l));}
+function fcap(l){return Math.floor(240*Math.pow(1.172,l));}
+function bcost(k,l){var b=B[k].b,m=Math.pow(1.26,l-1);return{w:Math.ceil(b.w*m),c:Math.ceil(b.c*m),i:Math.ceil(b.i*m)};}
+function btime(k,l,hq){return Math.max(5,Math.floor(B[k].t*Math.pow(1.2,l-1)/(1+hq*0.05)));}
+function fmt(n){return Math.floor(n).toLocaleString('ko-KR');}
+function fmtT(s){s=Math.max(0,s|0);var h=Math.floor(s/3600),m=Math.floor(s%3600/60),sc=s%60;return h?h+'시간'+m+'분':m?m+'분'+sc+'초':sc+'초';}
+var G;
+function loadG(){
+  try{
+    var r=localStorage.getItem('tw_village');
+    if(r){
+      G=JSON.parse(r);
+      var h=(Date.now()-G.savedAt)/3600000,mx=store(G.bldg.warehouse);
+      G.res.w=Math.min(G.res.w+prod(G.bldg.sawmill)*h,mx);
+      G.res.c=Math.min(G.res.c+prod(G.bldg.claypit)*h,mx);
+      G.res.i=Math.min(G.res.i+prod(G.bldg.ironmine)*h,mx);
+      if(G.bq&&!Array.isArray(G.bq))G.bq=[G.bq];
+      if(!G.bq)G.bq=[];
+      var now=Date.now();
+      while(G.bq.length&&G.bq[0].at&&now>=G.bq[0].at){var a=G.bq.shift();G.bldg[a.k]=a.lv;}
+      if(G.bq.length&&!G.bq[0].at){var n=G.bq[0],t=btime(n.k,n.lv,G.bldg.hq);n.at=now+t*1000;n.tot=t;}
+      return;
+    }
+  }catch(e){}
+  G={savedAt:Date.now(),res:{w:500,c:500,i:500},bldg:{hq:1,sawmill:0,claypit:0,ironmine:0,warehouse:1,farm:1,barracks:0,wall:0},bq:[]};
+}
+function saveG(){G.savedAt=Date.now();try{localStorage.setItem('tw_village',JSON.stringify(G));}catch(e){}}
+function qa(){return G.bq.length?G.bq[0]:null;}
+function getPct(){
+  var a=qa();if(!a||!a.at||!a.tot)return 0;
+  var rem=Math.max(0,(a.at-Date.now())/1000);
+  return Math.min(100,Math.round((1-rem/a.tot)*100));
+}
+function renderBar(){
+  var mx=store(G.bldg.warehouse);
+  document.getElementById('rw').textContent=fmt(G.res.w)+'/'+fmt(mx);
+  document.getElementById('rc').textContent=fmt(G.res.c)+'/'+fmt(mx);
+  document.getElementById('ri2').textContent=fmt(G.res.i)+'/'+fmt(mx);
+  var pu=KEYS.reduce(function(s,k){return s+(G.bldg[k]>0?B[k].p*G.bldg[k]:0);},0);
+  document.getElementById('rpop').textContent='👥 '+pu+'/'+fcap(G.bldg.farm);
+}
+function renderBQ(){
+  var a=qa(),el=document.getElementById('bq');
+  if(a&&a.at){
+    var sec=Math.max(0,Math.ceil((a.at-Date.now())/1000)),p=getPct();
+    document.getElementById('bqn').textContent=B[a.k].n+' Lv'+a.lv;
+    document.getElementById('bqt').textContent=fmtT(sec);
+    document.getElementById('bqf').style.width=p+'%';
+    el.style.display='';
+  }else{el.style.display='none';}
+}
+function renderGrid(){
+  var g=document.getElementById('bgrid');g.innerHTML='';
+  var a=qa();
+  KEYS.forEach(function(k){
+    var lv=G.bldg[k]||0,isA=a&&a.k===k,p=isA?getPct():0;
+    var d=document.createElement('div');d.className='tile';
+    d.innerHTML='<span class="ico">'+B[k].e+'</span><div class="nm">'+B[k].n+'</div><span class="lv">'+(lv?'Lv '+lv:'미건설')+'</span>'
+      +(isA?'<span class="bdg">건설중</span><div class="tbar"><div class="tbarf" id="tb-'+k+'" style="width:'+p+'%"></div></div>':'');
+    d.onclick=function(key){return function(){openP(key);};}(k);
+    g.appendChild(d);
   });
 }
-function renderInfo(){const el=document.getElementById('info-tab'),mx=store(G.bldg.warehouse);el.innerHTML=`<div class="info-card"><div class="info-title">⚙️ 건물 현황</div>${KEYS.map(k=>`<div class="irow"><b>${B[k].e} ${B[k].n}</b><span>Lv ${G.bldg[k]||0} / ${B[k].max}</span></div>`).join('')}</div><div class="info-card"><div class="info-title">📈 생산/시간</div><div class="irow"><b>🌲 목재</b><span>${prod(G.bldg.sawmill)}/h</span></div><div class="irow"><b>🏺 점토</b><span>${prod(G.bldg.claypit)}/h</span></div><div class="irow"><b>⛏️ 철</b><span>${prod(G.bldg.ironmine)}/h</span></div><div class="irow"><b>📦 창고 최대</b><span>${fmt(mx)}</span></div><div class="irow"><b>👥 인구 최대</b><span>${fcap(G.bldg.farm)}</span></div></div>`;}
-let activeKey=null;
-function openPopup(k){
-  activeKey=k;const lv=G.bldg[k]||0,nl=lv+1;
-  document.getElementById('pt').textContent=`${B[k].e} ${B[k].n} (현재 Lv ${lv})`;
+function renderV(){renderBQ();renderGrid();}
+var ak=null;
+function openP(k){
+  ak=k;var lv=G.bldg[k]||0,nl=lv+1;
+  document.getElementById('ph').textContent=B[k].e+' '+B[k].n+' (Lv'+lv+')';
   document.getElementById('pd').textContent=B[k].d;
-  const ppbar=document.getElementById('ppbar'),ppbarlbl=document.getElementById('ppbarlbl');
-  if(G.bq&&G.bq.k===k){
-    const sec=Math.max(0,Math.ceil((G.bq.at-Date.now())/1000)),pct=bqPct();
-    document.getElementById('pc').innerHTML='<span style="font-size:12px;color:#555">🔨 건설 진행 중</span>';
+  var a=qa(),ppw=document.getElementById('ppw');
+  if(a&&a.k===k&&a.at){
+    var sec=Math.max(0,Math.ceil((a.at-Date.now())/1000)),p=getPct();
+    document.getElementById('pc').innerHTML='<div class="ci"><span style="font-size:11px;color:#666">🔨 건설 진행 중</span></div>';
     document.getElementById('ptm').textContent='';
-    ppbar.style.display='';document.getElementById('ppbarf').style.width=pct+'%';
-    ppbarlbl.textContent=`완료까지 ${fmtT(sec)} 남음 (${pct}%)`;
-    document.getElementById('pbtn').disabled=true;document.getElementById('pbtn').textContent='건설 중…';
-  } else if(nl>B[k].max){
-    document.getElementById('pc').innerHTML='<span style="font-size:12px;color:#555">최대 레벨 달성! 🎉</span>';
-    document.getElementById('ptm').textContent='';ppbar.style.display='none';ppbarlbl.textContent='';
-    document.getElementById('pbtn').disabled=true;document.getElementById('pbtn').textContent='최대 레벨';
-  } else {
-    const c=bcost(k,nl),t=btime(k,nl,G.bldg.hq),sw=G.res.w<c.w,sc=G.res.c<c.c,si=G.res.i<c.i;
-    document.getElementById('pc').innerHTML=`<div class="ci"><div class="cl">🌲 목재</div><div class="cv${sw?' red':''}">${fmt(c.w)}</div></div><div class="ci"><div class="cl">🏺 점토</div><div class="cv${sc?' red':''}">${fmt(c.c)}</div></div><div class="ci"><div class="cl">⛏️ 철</div><div class="cv${si?' red':''}">${fmt(c.i)}</div></div>`;
-    document.getElementById('ptm').textContent=`건설 시간: ${fmtT(t)}`;
-    ppbar.style.display='none';ppbarlbl.textContent='';
-    const ok=!G.bq&&!sw&&!sc&&!si;
-    document.getElementById('pbtn').disabled=!ok;document.getElementById('pbtn').textContent=G.bq?'건설 중…':`Lv ${nl}로 업그레이드`;
+    ppw.style.display='';
+    document.getElementById('ppbarf').style.width=p+'%';
+    document.getElementById('pplb').textContent='완료까지 '+fmtT(sec)+' 남음 ('+p+'%)';
+    document.getElementById('pbtn').disabled=true;
+    document.getElementById('pbtn').textContent='건설 중…';
+  }else if(nl>B[k].max){
+    document.getElementById('pc').innerHTML='<div class="ci"><span style="font-size:11px;color:#666">최대 레벨!</span></div>';
+    document.getElementById('ptm').textContent='';ppw.style.display='none';
+    document.getElementById('pbtn').disabled=true;document.getElementById('pbtn').textContent='최대레벨';
+  }else{
+    var c=bcost(k,nl),t=btime(k,nl,G.bldg.hq);
+    var sw=G.res.w<c.w,sc=G.res.c<c.c,si=G.res.i<c.i;
+    document.getElementById('pc').innerHTML=
+      '<div class="ci"><div class="cl">🌲목재</div><div class="cv'+(sw?' r':'')+'">'+fmt(c.w)+'</div></div>'+
+      '<div class="ci"><div class="cl">🏺점토</div><div class="cv'+(sc?' r':'')+'">'+fmt(c.c)+'</div></div>'+
+      '<div class="ci"><div class="cl">⛏️철</div><div class="cv'+(si?' r':'')+'">'+fmt(c.i)+'</div></div>';
+    document.getElementById('ptm').textContent='건설 시간: '+fmtT(t);
+    ppw.style.display='none';
+    var ok=!a&&!sw&&!sc&&!si;
+    document.getElementById('pbtn').disabled=!ok;
+    document.getElementById('pbtn').textContent=a?'건설 중 (불가)':'Lv'+nl+' 업그레이드';
   }
-  document.getElementById('popup').classList.add('on');
+  document.getElementById('ov').classList.add('on');
 }
-function closePopup(){document.getElementById('popup').classList.remove('on');activeKey=null;}
-let curTab='village';
-function showTab(t){curTab=t;document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('on',b.dataset.t===t));document.getElementById('bgrid').style.display=t==='village'?'':'none';document.getElementById('bq').style.display=(t==='village'&&G.bq)?'':'none';document.getElementById('tab-map').style.display=t==='map'?'':'none';document.getElementById('info-tab').style.display=t==='info'?'':'none';if(t==='info')renderInfo();}
-document.querySelectorAll('.nb').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.t)));
-document.getElementById('pbtn').addEventListener('click',()=>{if(activeKey)upgrade(activeKey);});
-document.getElementById('pclose').addEventListener('click',closePopup);
-document.getElementById('popup').addEventListener('click',e=>{if(e.target===document.getElementById('popup'))closePopup();});
-let last=Date.now();
+function closeP(){document.getElementById('ov').classList.remove('on');ak=null;}
+document.getElementById('pbtn').onclick=function(){
+  if(!ak)return;
+  if(qa()){alert('건설 중!');return;}
+  var lv=G.bldg[ak]||0,nl=lv+1;
+  var c=bcost(ak,nl);
+  if(G.res.w<c.w||G.res.c<c.c||G.res.i<c.i){alert('자원 부족!');return;}
+  G.res.w-=c.w;G.res.c-=c.c;G.res.i-=c.i;
+  var t=btime(ak,nl,G.bldg.hq);
+  G.bq=[{k:ak,lv:nl,at:Date.now()+t*1000,tot:t}];
+  saveG();closeP();renderV();
+};
+document.getElementById('ov').onclick=function(e){if(e.target===document.getElementById('ov'))closeP();};
+var curTab='v';
+function showTab(t){
+  curTab=t;
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.toggle('on',b.dataset.tab===t);});
+  document.getElementById('bgrid').style.display=t==='v'?'':'none';
+  document.getElementById('bq').style.display='none';
+  document.getElementById('tab-m').style.display=t==='m'?'':'none';
+  document.getElementById('tab-i').style.display=t==='i'?'':'none';
+  if(t==='v')renderV();
+  if(t==='i'){
+    var mx=store(G.bldg.warehouse);
+    document.getElementById('tab-i').innerHTML=
+      '<div class="ic"><div class="ih">⚙️ 건물 현황</div>'+
+      KEYS.map(function(k){return '<div class="ir"><b>'+B[k].e+' '+B[k].n+'</b><span>Lv '+(G.bldg[k]||0)+'/'+B[k].max+'</span></div>';}).join('')+
+      '</div><div class="ic"><div class="ih">📈 생산/시간</div>'+
+      '<div class="ir"><b>🌲 목재</b><span>'+prod(G.bldg.sawmill)+'/h</span></div>'+
+      '<div class="ir"><b>🏺 점토</b><span>'+prod(G.bldg.claypit)+'/h</span></div>'+
+      '<div class="ir"><b>⛏️ 철</b><span>'+prod(G.bldg.ironmine)+'/h</span></div>'+
+      '<div class="ir"><b>📦 창고</b><span>최대 '+fmt(mx)+'</span></div></div>';
+  }
+}
+document.querySelectorAll('.nb').forEach(function(b){b.onclick=function(){showTab(b.dataset.tab);};});
+var last=Date.now();
 function tick(){
-  const now=Date.now(),dt=(now-last)/3600000;last=now;
-  const mx=store(G.bldg.warehouse);
+  var now=Date.now(),dt=(now-last)/3600000;last=now;
+  var mx=store(G.bldg.warehouse);
   G.res.w=Math.min(G.res.w+prod(G.bldg.sawmill)*dt,mx);
   G.res.c=Math.min(G.res.c+prod(G.bldg.claypit)*dt,mx);
   G.res.i=Math.min(G.res.i+prod(G.bldg.ironmine)*dt,mx);
-  if(G.bq&&now>=G.bq.at){G.bldg[G.bq.k]=G.bq.lv;G.bq=null;save();renderVillage();}
-  renderBar();
-  if(G.bq&&curTab==='village'){
-    const sec=Math.max(0,Math.ceil((G.bq.at-now)/1000)),pct=bqPct();
-    const t=document.getElementById('bqt');if(t)t.textContent=fmtT(sec);
-    const pf=document.getElementById('bqpf');if(pf)pf.style.width=pct+'%';
-    const tpf=document.getElementById('tpf-'+G.bq.k);if(tpf)tpf.style.width=pct+'%';
-    if(activeKey===G.bq.k){
-      const ppbarf=document.getElementById('ppbarf');if(ppbarf)ppbarf.style.width=pct+'%';
-      document.getElementById('ppbarlbl').textContent=`완료까지 ${fmtT(sec)} 남음 (${pct}%)`;
+  var a=qa();
+  if(a&&a.at&&now>=a.at){
+    G.bldg[a.k]=a.lv;G.bq=[];
+    saveG();renderV();
+  }else if(a&&a.at&&curTab==='v'){
+    var sec=Math.max(0,Math.ceil((a.at-now)/1000)),p=getPct();
+    var et=document.getElementById('bqt');if(et)et.textContent=fmtT(sec);
+    var ef=document.getElementById('bqf');if(ef)ef.style.width=p+'%';
+    var tf=document.getElementById('tb-'+a.k);if(tf)tf.style.width=p+'%';
+    if(ak===a.k){
+      var pf=document.getElementById('ppbarf');if(pf)pf.style.width=p+'%';
+      var pl=document.getElementById('pplb');if(pl)pl.textContent='완료까지 '+fmtT(sec)+' 남음 ('+p+'%)';
     }
   }
+  renderBar();
 }
-setInterval(save,20000);setInterval(tick,1000);
-load();renderBar();renderVillage();
+setInterval(tick,1000);
+setInterval(saveG,30000);
+loadG();renderBar();renderV();
 </script>
 </body>
 </html>
