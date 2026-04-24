@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🥚 다마고치</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;}
+body{background:#1a0a2e;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;}
+.device{background:#ff6b9d;border-radius:24px 24px 56px 56px;padding:14px 14px 36px;box-shadow:0 0 0 3px #cc3366,0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.3);width:310px;}
+.screen{background:#9bbc0f;border-radius:6px;border:4px solid #0f380f;padding:10px;min-height:360px;display:flex;flex-direction:column;align-items:center;box-shadow:inset 0 2px 8px rgba(0,0,0,.4);}
+.page{display:none;width:100%;}
+.page.active{display:flex;flex-direction:column;align-items:center;}
+
+/* SELECT */
+.title{font-size:13px;color:#0f380f;font-weight:bold;margin:6px 0 14px;text-align:center;line-height:1.5;}
+.choices{display:flex;gap:10px;justify-content:center;}
+.choice-btn{background:#8bac0f;border:2px solid #0f380f;border-radius:10px;padding:8px 10px;cursor:pointer;text-align:center;font-family:inherit;box-shadow:3px 3px 0 #0f380f;}
+.choice-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #0f380f;}
+.choice-btn canvas{display:block;margin:0 auto 4px;image-rendering:pixelated;}
+.choice-btn span{font-size:10px;color:#0f380f;font-weight:bold;}
+
+/* NAME */
+.name-preview{image-rendering:pixelated;margin:8px 0;}
+.name-input{background:#8bac0f;border:2px solid #0f380f;border-radius:6px;padding:4px 8px;font-family:inherit;font-size:13px;color:#0f380f;width:150px;text-align:center;margin:8px 0;}
+.name-input::placeholder{color:#306230;}
+.ok-btn{background:#8bac0f;border:2px solid #0f380f;border-radius:8px;padding:6px 18px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:bold;color:#0f380f;box-shadow:2px 2px 0 #0f380f;}
+.ok-btn:active{transform:translate(2px,2px);box-shadow:0 0 0 #0f380f;}
+
+/* EGG */
+.egg-txt{font-size:11px;color:#0f380f;margin-top:8px;font-weight:bold;}
+
+/* GAME */
+.g-top{display:flex;justify-content:space-between;width:100%;font-size:9px;color:#306230;margin-bottom:2px;}
+.pet-name{font-size:13px;color:#0f380f;font-weight:bold;}
+.pet-stage{font-size:9px;color:#306230;margin-bottom:4px;}
+#pet-canvas{image-rendering:pixelated;margin:2px 0 4px;}
+.bubble{background:#8bac0f;border:2px solid #0f380f;border-radius:8px;padding:3px 8px;font-size:10px;color:#0f380f;min-height:24px;text-align:center;width:100%;margin-bottom:6px;}
+.stats{width:100%;display:flex;flex-direction:column;gap:3px;margin-bottom:6px;}
+.srow{display:flex;align-items:center;gap:4px;}
+.slabel{font-size:8px;color:#0f380f;width:44px;font-weight:bold;}
+.sbg{flex:1;height:7px;background:#306230;border:1px solid #0f380f;border-radius:1px;overflow:hidden;}
+.sbar{height:100%;border-radius:1px;transition:width .3s;}
+.sval{font-size:8px;color:#0f380f;width:22px;text-align:right;}
+.b-hunger{background:#e67e22;} .b-happy{background:#f1c40f;} .b-clean{background:#3498db;} .b-energy{background:#9b59b6;} .b-stress{background:#e74c3c;}
+.acts{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:100%;}
+.act{background:#8bac0f;border:2px solid #0f380f;border-radius:7px;padding:5px 2px;cursor:pointer;text-align:center;font-family:inherit;box-shadow:2px 2px 0 #0f380f;}
+.act:active{transform:translate(2px,2px);box-shadow:0 0 0 #0f380f;}
+.act .ai{font-size:15px;display:block;}
+.act .al{font-size:8px;color:#0f380f;font-weight:bold;}
+
+/* DEATH */
+.death{text-align:center;color:#0f380f;padding:20px;}
+.death h2{font-size:16px;margin:8px 0;}
+.death p{font-size:10px;margin:3px 0;}
+.retry{margin-top:14px;background:#8bac0f;border:2px solid #0f380f;border-radius:8px;padding:7px 18px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:bold;color:#0f380f;box-shadow:2px 2px 0 #0f380f;}
+
+.dev-btns{display:flex;justify-content:center;gap:18px;margin-top:14px;}
+.dev-btn{width:18px;height:18px;background:#cc3366;border-radius:50%;border:2px solid #881133;box-shadow:0 2px 3px rgba(0,0,0,.4);}
+</style>
+</head>
+<body>
+<div class="device">
+<div class="screen" id="screen">
+
+<!-- SELECT -->
+<div class="page active" id="pg-select">
+  <div class="title">✨ 다마고치 ✨<br>키울 동물을 골라요!</div>
+  <div class="choices">
+    <button class="choice-btn" onclick="pickAnimal('rabbit')">
+      <canvas id="pv-rabbit" width="48" height="48" style="width:48px;height:48px"></canvas>
+      <span>🐰 토끼</span>
+    </button>
+    <button class="choice-btn" onclick="pickAnimal('turtle')">
+      <canvas id="pv-turtle" width="48" height="48" style="width:48px;height:48px"></canvas>
+      <span>🐢 거북이</span>
+    </button>
+    <button class="choice-btn" onclick="pickAnimal('duck')">
+      <canvas id="pv-duck" width="48" height="48" style="width:48px;height:48px"></canvas>
+      <span>🐥 오리</span>
+    </button>
+  </div>
+</div>
+
+<!-- NAME -->
+<div class="page" id="pg-name">
+  <div class="title">이름을 지어주세요!</div>
+  <canvas class="name-preview" id="cv-name" width="72" height="72" style="width:72px;height:72px"></canvas>
+  <input class="name-input" id="inp-name" type="text" placeholder="이름 입력..." maxlength="6">
+  <button class="ok-btn" onclick="confirmName()">결정!</button>
+</div>
+
+<!-- EGG -->
+<div class="page" id="pg-egg">
+  <div class="title">알에서 부화 중...</div>
+  <canvas id="cv-egg" width="96" height="96" style="width:96px;height:96px;image-rendering:pixelated;margin:8px 0"></canvas>
+  <div class="egg-txt" id="egg-txt">알이 따뜻해요...</div>
+</div>
+
+<!-- GAME -->
+<div class="page" id="pg-game">
+  <div class="g-top">
+    <span id="g-age">나이: 0일</span>
+    <span id="g-stage">아기</span>
+  </div>
+  <div class="pet-name" id="g-name">-</div>
+  <canvas id="pet-canvas" width="96" height="96" style="width:96px;height:96px"></canvas>
+  <div class="bubble" id="bubble">안녕! 잘 부탁해! 🐾</div>
+  <div class="stats">
+    <div class="srow"><span class="slabel">🍗 배고픔</span><div class="sbg"><div class="sbar b-hunger" id="sb-hunger" style="width:80%"></div></div><span class="sval" id="sv-hunger">80</span></div>
+    <div class="srow"><span class="slabel">😊 행복</span><div class="sbg"><div class="sbar b-happy"  id="sb-happy"  style="width:70%"></div></div><span class="sval" id="sv-happy">70</span></div>
+    <div class="srow"><span class="slabel">🧼 청결</span><div class="sbg"><div class="sbar b-clean"  id="sb-clean"  style="width:90%"></div></div><span class="sval" id="sv-clean">90</span></div>
+    <div class="srow"><span class="slabel">⚡ 에너지</span><div class="sbg"><div class="sbar b-energy" id="sb-energy" style="width:80%"></div></div><span class="sval" id="sv-energy">80</span></div>
+    <div class="srow"><span class="slabel">😰 스트레스</span><div class="sbg"><div class="sbar b-stress" id="sb-stress" style="width:20%"></div></div><span class="sval" id="sv-stress">20</span></div>
+  </div>
+  <div class="acts">
+    <button class="act" onclick="act('feed')"><span class="ai">🍎</span><span class="al">먹이기</span></button>
+    <button class="act" onclick="act('snack')"><span class="ai">🍬</span><span class="al">간식</span></button>
+    <button class="act" onclick="act('clean')"><span class="ai">🛁</span><span class="al">씻기기</span></button>
+    <button class="act" onclick="act('play')"><span class="ai">🎮</span><span class="al">놀기</span></button>
+    <button class="act" onclick="act('walk')"><span class="ai">🚶</span><span class="al">산책</span></button>
+    <button class="act" onclick="act('sleep')"><span class="ai">💤</span><span class="al">재우기</span></button>
+  </div>
+</div>
+
+<!-- DEATH -->
+<div class="page" id="pg-death">
+  <div class="death">
+    <div style="font-size:44px">😢</div>
+    <h2 id="d-name">-</h2>
+    <p>무지개다리를 건넜어요...</p>
+    <p id="d-age" style="margin-top:4px;color:#306230"></p>
+    <button class="retry" onclick="restart()">다시 시작</button>
+  </div>
+</div>
+
+</div>
+<div class="dev-btns">
+  <div class="dev-btn"></div><div class="dev-btn"></div><div class="dev-btn"></div>
+</div>
+</div>
+<script>
+// ── DRAWING ──────────────────────────────────────────────────────────────────
+function clr(ctx,w,h){ctx.clearRect(0,0,w,h);}
+function el(ctx,cx,cy,rx,ry,color){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);ctx.fill();}
+function ci(ctx,cx,cy,r,color){el(ctx,cx,cy,r,r,color);}
+
+function drawEgg(ctx,W,H,tick){
+  const cx=W/2,cy=H*.52;
+  const wobble=tick>4?Math.sin(tick*.5)*2:0;
+  ctx.save();ctx.translate(wobble,0);
+  el(ctx,cx,cy+H*.38,W*.24,H*.05,'rgba(0,0,0,.12)');
+  el(ctx,cx,cy,W*.28,H*.34,'#FFE566');
+  el(ctx,cx-W*.08,cy-H*.12,W*.06,H*.08,'rgba(255,255,255,.55)');
+  if(tick>9){
+    ctx.strokeStyle='#B8860B';ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.moveTo(cx+2,cy-H*.12);ctx.lineTo(cx+W*.08,cy);ctx.lineTo(cx-2,cy+H*.09);ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawRabbit(ctx,W,H,s,mood,tick){
+  const cx=W/2,cy=H*.55+Math.sin(tick*.03)*1.5;
+  el(ctx,cx,cy+s*24,s*17,s*5,'rgba(0,0,0,.12)');
+  el(ctx,cx-s*9,cy-s*26,s*5,s*13,'#F0F0F0');
+  el(ctx,cx+s*9,cy-s*26,s*5,s*13,'#F0F0F0');
+  el(ctx,cx-s*9,cy-s*26,s*2.5,s*9,'#FFB6C1');
+  el(ctx,cx+s*9,cy-s*26,s*2.5,s*9,'#FFB6C1');
+  el(ctx,cx,cy+s*10,s*17,s*14,'#F0F0F0');
+  ci(ctx,cx,cy-s*8,s*15,'#FFFFFF');
+  el(ctx,cx-s*9,cy-s*4,s*5,s*3,'rgba(255,182,193,.55)');
+  el(ctx,cx+s*9,cy-s*4,s*5,s*3,'rgba(255,182,193,.55)');
+  if(mood==='sleep'){
+    ctx.strokeStyle='#555';ctx.lineWidth=s*1.5;
+    ctx.beginPath();ctx.arc(cx-s*6,cy-s*9,s*2.5,Math.PI,0);ctx.stroke();
+    ctx.beginPath();ctx.arc(cx+s*6,cy-s*9,s*2.5,Math.PI,0);ctx.stroke();
+  } else {
+    const ew=mood==='happy'?s*3.2:s*2.4;
+    ci(ctx,cx-s*6,cy-s*9,ew,'#333');ci(ctx,cx+s*6,cy-s*9,ew,'#333');
+    ci(ctx,cx-s*5.5,cy-s*9.5,s*.9,'#FFF');ci(ctx,cx+s*6.5,cy-s*9.5,s*.9,'#FFF');
+  }
+  ci(ctx,cx,cy-s*5,s*1.8,'#FFB6C1');
+  ctx.strokeStyle='#aaa';ctx.lineWidth=s*.9;
+  ctx.beginPath();
+  if(mood==='happy'){ctx.arc(cx,cy-s*3,s*3,0,Math.PI);}
+  else if(mood==='sad'){ctx.arc(cx,cy-s*1.5,s*3,Math.PI,Math.PI*2);}
+  else{ctx.moveTo(cx-s*3,cy-s*3);ctx.lineTo(cx,cy-s*2);ctx.lineTo(cx+s*3,cy-s*3);}
+  ctx.stroke();
+  ci(ctx,cx+s*13,cy+s*12,s*4,'#F0F0F0');
+  el(ctx,cx-s*7,cy+s*21,s*7,s*3.5,'#F0F0F0');
+  el(ctx,cx+s*7,cy+s*21,s*7,s*3.5,'#F0F0F0');
+}
+
+function drawTurtle(ctx,W,H,s,mood,tick){
+  const cx=W/2,cy=H*.55+Math.sin(tick*.03)*1.2;
+  el(ctx,cx,cy+s*22,s*17,s*5,'rgba(0,0,0,.12)');
+  el(ctx,cx,cy,s*19,s*14,'#5CAF50');
+  ctx.strokeStyle='#2E7D32';ctx.lineWidth=s*1.2;
+  ctx.beginPath();
+  for(let i=0;i<6;i++){const a=i/6*Math.PI*2-Math.PI/2;ctx.lineTo(cx+Math.cos(a)*s*12,cy-s*2+Math.sin(a)*s*9);}
+  ctx.closePath();ctx.stroke();
+  el(ctx,cx-s*4,cy-s*6,s*5,s*3,'rgba(144,210,80,.45)');
+  ci(ctx,cx,cy-s*14,s*9,'#8BC34A');
+  if(mood==='sleep'){
+    ctx.strokeStyle='#333';ctx.lineWidth=s*1.4;
+    ctx.beginPath();ctx.arc(cx-s*3.5,cy-s*15,s*2,Math.PI,0);ctx.stroke();
+    ctx.beginPath();ctx.arc(cx+s*3.5,cy-s*15,s*2,Math.PI,0);ctx.stroke();
+  } else {
+    const ew=mood==='happy'?s*2.3:s*1.9;
+    ci(ctx,cx-s*3.5,cy-s*15,ew,'#333');ci(ctx,cx+s*3.5,cy-s*15,ew,'#333');
+    ci(ctx,cx-s*3,cy-s*15.5,s*.7,'#FFF');ci(ctx,cx+s*4,cy-s*15.5,s*.7,'#FFF');
+  }
+  ctx.strokeStyle='#2E7D32';ctx.lineWidth=s;
+  ctx.beginPath();
+  if(mood==='happy'){ctx.arc(cx,cy-s*11,s*3,0,Math.PI);}
+  else if(mood==='sad'){ctx.arc(cx,cy-s*10,s*3,Math.PI,Math.PI*2);}
+  else{ctx.moveTo(cx-s*2.5,cy-s*11);ctx.lineTo(cx+s*2.5,cy-s*11);}
+  ctx.stroke();
+  el(ctx,cx-s*15,cy+s*7,s*5,s*3.5,'#8BC34A');
+  el(ctx,cx+s*15,cy+s*7,s*5,s*3.5,'#8BC34A');
+  el(ctx,cx-s*11,cy+s*17,s*5,s*3.5,'#8BC34A');
+  el(ctx,cx+s*11,cy+s*17,s*5,s*3.5,'#8BC34A');
+}
+
+function drawDuck(ctx,W,H,s,mood,tick){
+  const cx=W/2,cy=H*.55+Math.sin(tick*.03)*1.5;
+  el(ctx,cx,cy+s*23,s*17,s*5,'rgba(0,0,0,.12)');
+  el(ctx,cx,cy+s*5,s*19,s*14,'#FFD700');
+  ctx.fillStyle='#FFA000';
+  ctx.beginPath();ctx.ellipse(cx+s*11,cy+s*3,s*8,s*9,.3,0,Math.PI*2);ctx.fill();
+  ci(ctx,cx-s*5,cy-s*13,s*11,'#FFD700');
+  el(ctx,cx-s*14,cy-s*12,s*6,s*3.5,'#FF8C00');
+  if(mood==='sleep'){
+    ctx.strokeStyle='#333';ctx.lineWidth=s*1.5;
+    ctx.beginPath();ctx.arc(cx-s*4,cy-s*14,s*2.5,Math.PI,0);ctx.stroke();
+  } else {
+    ci(ctx,cx-s*4,cy-s*14,mood==='happy'?s*2.8:s*2.3,'#333');
+    ci(ctx,cx-s*3.5,cy-s*14.5,s*.8,'#FFF');
+  }
+  if(mood==='happy'){
+    ctx.strokeStyle='#CC6600';ctx.lineWidth=s;
+    ctx.beginPath();ctx.arc(cx-s*14,cy-s*10,s*2.5,0,Math.PI);ctx.stroke();
+  }
+  el(ctx,cx-s*7,cy+s*22,s*8,s*3.5,'#FF8C00');
+  el(ctx,cx+s*8,cy+s*22,s*8,s*3.5,'#FF8C00');
+}
+
+const SCALE={baby:.55,teen:.75,adult:.9};
+
+function drawPet(ctx,W,H,species,stage,mood,tick){
+  clr(ctx,W,H);
+  const s=SCALE[stage]||.7;
+  if(species==='rabbit') drawRabbit(ctx,W,H,s,mood,tick);
+  else if(species==='turtle') drawTurtle(ctx,W,H,s,mood,tick);
+  else drawDuck(ctx,W,H,s,mood,tick);
+}
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let pet=null,species=null,gLoop=null,aFrame=null,aTick=0,eLoop=null,eTick=0;
+
+function mkPet(sp,name){
+  return{sp,name,stage:'baby',age:0,hunger:80,happy:70,clean:90,energy:80,stress:15,ticks:0,speechAt:0};
+}
+function clamp(v,a=0,b=100){return Math.max(a,Math.min(b,v));}
+
+function mood(){
+  if(!pet)return'normal';
+  if(pet.energy<20)return'sleep';
+  if(pet.happy<30||pet.stress>70)return'sad';
+  if(pet.happy>70&&pet.stress<30)return'happy';
+  return'normal';
+}
+
+function status(){
+  if(!pet)return'';
+  if(pet.energy<15) return'너무 피곤해... 😴';
+  if(pet.hunger<15) return'배고파요... 🍽️';
+  if(pet.clean<20)  return'씻고 싶어요! 🛁';
+  if(pet.stress>80) return'스트레스 받아요! 😤';
+  if(pet.happy<20)  return'같이 놀아줘... 😢';
+  if(pet.happy>80)  return'너무 행복해! 🎉';
+  const msgs=['뭐하고 싶어~','같이 있어줘서 좋아!','오늘 날씨 좋다~','산책 가고 싶다!'];
+  return msgs[Math.floor(Math.random()*msgs.length)];
+}
+
+function setSpeech(msg){
+  document.getElementById('bubble').textContent=msg;
+  if(pet)pet.speechAt=Date.now();
+}
+
+function updateUI(){
+  if(!pet)return;
+  ['hunger','happy','clean','energy','stress'].forEach(k=>{
+    const bar=document.getElementById('sb-'+k);
+    const val=document.getElementById('sv-'+k);
+    if(bar)bar.style.width=pet[k]+'%';
+    if(val)val.textContent=Math.round(pet[k]);
+  });
+  document.getElementById('g-name').textContent=pet.name;
+  document.getElementById('g-stage').textContent={baby:'🐣 아기',teen:'🌱 청소년',adult:'⭐ 어른'}[pet.stage];
+  document.getElementById('g-age').textContent='나이: '+pet.age+'일';
+  if(Date.now()-pet.speechAt>9000) setSpeech(status());
+}
+
+function renderPet(){
+  const c=document.getElementById('pet-canvas');
+  if(!c||!pet)return;
+  drawPet(c.getContext('2d'),c.width,c.height,pet.sp,pet.stage,mood(),aTick);
+}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── ANIM LOOP ────────────────────────────────────────────────────────────────
+function startAnim(){
+  if(aFrame)cancelAnimationFrame(aFrame);
+  (function frame(){aTick++;renderPet();aFrame=requestAnimationFrame(frame);})();
+}
+
+// ── GAME TICK ────────────────────────────────────────────────────────────────
+function tick(){
+  if(!pet)return;
+  pet.ticks++;
+  pet.hunger =clamp(pet.hunger -2);
+  pet.happy  =clamp(pet.happy  -1);
+  pet.clean  =clamp(pet.clean  -1);
+  pet.energy =clamp(pet.energy -1);
+  pet.stress =clamp(pet.stress +1);
+  if(pet.hunger<20){pet.stress=clamp(pet.stress+2);pet.happy=clamp(pet.happy-1);}
+  if(pet.clean <20){pet.stress=clamp(pet.stress+2);}
+  if(pet.stress>80){pet.happy=clamp(pet.happy-1);pet.energy=clamp(pet.energy-1);}
+  if(pet.ticks%18===0){
+    pet.age++;
+    if(pet.stage==='baby'&&pet.age>=3){pet.stage='teen';setSpeech(pet.name+'이(가) 청소년이 됐어요! 🎊');}
+    else if(pet.stage==='teen'&&pet.age>=7){pet.stage='adult';setSpeech(pet.name+'이(가) 어른이 됐어요! 🌟');}
+  }
+  if((pet.hunger<=0&&pet.energy<=0)||(pet.stress>=100&&pet.happy<=0)){die();return;}
+  updateUI();
+}
+
+// ── ACTIONS ──────────────────────────────────────────────────────────────────
+const ACTS={
+  feed:  ()=>{pet.hunger=clamp(pet.hunger+25);pet.energy=clamp(pet.energy+5);setSpeech('냠냠냠~ 맛있어! 🍎');},
+  snack: ()=>{pet.hunger=clamp(pet.hunger+12);pet.happy=clamp(pet.happy+10);pet.stress=clamp(pet.stress-5);setSpeech('간식이다! 최고야! 🍬');},
+  clean: ()=>{pet.clean=clamp(pet.clean+40);pet.stress=clamp(pet.stress-5);setSpeech('뽀송뽀송~ 개운해! 🛁');},
+  play:  ()=>{
+    if(pet.energy<15){setSpeech('너무 피곤해서 못 놀아... 😴');return;}
+    pet.happy=clamp(pet.happy+20);pet.stress=clamp(pet.stress-15);
+    pet.energy=clamp(pet.energy-10);pet.clean=clamp(pet.clean-5);
+    setSpeech('같이 놀아서 너무 좋아! 🎮');
+  },
+  walk:  ()=>{
+    if(pet.energy<20){setSpeech('에너지가 부족해요... 😴');return;}
+    pet.happy=clamp(pet.happy+15);pet.stress=clamp(pet.stress-20);
+    pet.energy=clamp(pet.energy-15);pet.hunger=clamp(pet.hunger-5);
+    pet.clean=clamp(pet.clean-8);setSpeech('산책 최고다! 기분 좋아~ 🚶');
+  },
+  sleep: ()=>{pet.energy=clamp(pet.energy+40);pet.stress=clamp(pet.stress-10);setSpeech('잘 잤다! 개운해~ ⚡');},
+};
+
+function act(a){if(!pet)return;if(ACTS[a])ACTS[a]();updateUI();}
+
+// ── DEATH ────────────────────────────────────────────────────────────────────
+function die(){
+  clearInterval(gLoop);cancelAnimationFrame(aFrame);
+  document.getElementById('d-name').textContent=pet.name;
+  document.getElementById('d-age').textContent=pet.age+'일 동안 함께 했어요';
+  showPage('pg-death');
+}
+
+// ── EGG ANIM ─────────────────────────────────────────────────────────────────
+function startEgg(){
+  const c=document.getElementById('cv-egg');
+  const ctx=c.getContext('2d');
+  const msgs=['알이 따뜻해요...','알이 흔들려요! 🥚','뭔가 나오려 해요!','짠! 🐣'];
+  eTick=0;
+  clearInterval(eLoop);
+  eLoop=setInterval(()=>{
+    eTick++;
+    clr(ctx,c.width,c.height);
+    drawEgg(ctx,c.width,c.height,eTick);
+    document.getElementById('egg-txt').textContent=msgs[Math.min(Math.floor(eTick/4),3)];
+    if(eTick>=16){clearInterval(eLoop);setTimeout(startGame,400);}
+  },350);
+}
+
+// ── FLOW ─────────────────────────────────────────────────────────────────────
+function pickAnimal(sp){
+  species=sp;
+  const c=document.getElementById('cv-name');
+  const ctx=c.getContext('2d');
+  clr(ctx,c.width,c.height);
+  drawPet(ctx,c.width,c.height,sp,'baby','happy',0);
+  const def={rabbit:'뭉치',turtle:'거북이',duck:'꽥꽥이'};
+  document.getElementById('inp-name').value=def[sp]||'';
+  showPage('pg-name');
+}
+
+function confirmName(){
+  const name=document.getElementById('inp-name').value.trim()||'친구';
+  pet=mkPet(species,name);
+  showPage('pg-egg');
+  startEgg();
+}
+
+function startGame(){
+  showPage('pg-game');
+  updateUI();
+  startAnim();
+  if(gLoop)clearInterval(gLoop);
+  gLoop=setInterval(tick,8000);
+}
+
+function restart(){
+  pet=null;species=null;
+  if(gLoop)clearInterval(gLoop);
+  if(eLoop)clearInterval(eLoop);
+  if(aFrame)cancelAnimationFrame(aFrame);
+  showPage('pg-select');
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+(function init(){
+  ['rabbit','turtle','duck'].forEach(sp=>{
+    const c=document.getElementById('pv-'+sp);
+    drawPet(c.getContext('2d'),c.width,c.height,sp,'baby','happy',0);
+  });
+})();
+</script>
+</body>
+</html>
