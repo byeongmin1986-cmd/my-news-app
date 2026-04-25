@@ -1,0 +1,154 @@
+<!DOCTYPE html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><title>🥚 다마고치</title><style>
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-tap-highlight-color:transparent}
+body{background:#1a0a2e;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:monospace}
+.dv{background:#ff6b9d;border-radius:24px 24px 56px 56px;padding:12px 12px 32px;box-shadow:0 0 0 3px #cc3366,0 8px 32px #0006;width:300px}
+.sc{background:#9bbc0f;border-radius:6px;border:4px solid #0f380f;padding:10px;min-height:340px;display:flex;flex-direction:column;align-items:center;box-shadow:inset 0 2px 8px #0006}
+.pg{display:none;width:100%}.pg.on{display:flex;flex-direction:column;align-items:center}
+.ttl{font-size:13px;color:#0f380f;font-weight:700;margin:6px 0 12px;text-align:center;line-height:1.5}
+.row{display:flex;gap:10px;justify-content:center}
+.cb{background:#8bac0f;border:2px solid #0f380f;border-radius:10px;padding:8px 12px;cursor:pointer;text-align:center;font-family:inherit;box-shadow:3px 3px 0 #0f380f;font-size:32px}
+.cb:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #0f380f}
+.cb small{display:block;font-size:10px;color:#0f380f;font-weight:700}
+.ni{background:#8bac0f;border:2px solid #0f380f;border-radius:6px;padding:4px 8px;font-family:inherit;font-size:13px;color:#0f380f;width:150px;text-align:center;margin:8px 0}
+.ob{background:#8bac0f;border:2px solid #0f380f;border-radius:8px;padding:6px 18px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;color:#0f380f;box-shadow:2px 2px 0 #0f380f}
+.ob:active{transform:translate(2px,2px);box-shadow:0 0 0}
+.pet{font-size:72px;text-align:center;margin:4px 0;animation:bob 2s infinite ease-in-out}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.egg{font-size:72px;display:block;text-align:center;margin:10px 0;animation:wob .5s infinite alternate}
+@keyframes wob{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+.bl{background:#8bac0f;border:2px solid #0f380f;border-radius:8px;padding:3px 8px;font-size:10px;color:#0f380f;min-height:22px;text-align:center;width:100%;margin-bottom:6px}
+.st{width:100%;display:flex;flex-direction:column;gap:3px;margin-bottom:6px}
+.sr{display:flex;align-items:center;gap:4px}
+.sl{font-size:8px;color:#0f380f;width:46px;font-weight:700}
+.sb{flex:1;height:7px;background:#306230;border:1px solid #0f380f;overflow:hidden}
+.sf{height:100%;transition:width .3s}
+.sv{font-size:8px;color:#0f380f;width:20px;text-align:right}
+.ag{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:100%}
+.ab{background:#8bac0f;border:2px solid #0f380f;border-radius:7px;padding:5px 2px;cursor:pointer;text-align:center;font-family:inherit;box-shadow:2px 2px 0 #0f380f}
+.ab:active{transform:translate(2px,2px);box-shadow:0 0 0}
+.ab span{display:block}.ab .i{font-size:15px}.ab .l{font-size:8px;color:#0f380f;font-weight:700}
+.gt{display:flex;justify-content:space-between;width:100%;font-size:9px;color:#306230;margin-bottom:2px}
+.gn{font-size:13px;color:#0f380f;font-weight:700;margin-bottom:2px}
+.dt{text-align:center;color:#0f380f;padding:16px}
+.dt h2{font-size:15px;margin:6px 0}.dt p{font-size:10px;margin:3px 0}
+.db{display:flex;justify-content:center;gap:16px;margin-top:12px}
+.d{width:16px;height:16px;background:#cc3366;border-radius:50%;border:2px solid #881133}
+</style></head><body>
+<div class=dv><div class=sc>
+
+<div class="pg on" id=p0>
+<div class=ttl>✨ 다마고치 ✨<br>키울 동물을 골라요!</div>
+<div class=row>
+<button class=cb onclick="pick('rabbit')">🐰<small>토끼</small></button>
+<button class=cb onclick="pick('turtle')">🐢<small>거북이</small></button>
+<button class=cb onclick="pick('duck')">🐥<small>오리</small></button>
+</div></div>
+
+<div class=pg id=p1>
+<div class=ttl>이름을 지어주세요!</div>
+<div id=pv style="font-size:64px;text-align:center;margin:8px 0"></div>
+<input class=ni id=ni placeholder="이름 입력..." maxlength=6>
+<button class=ob onclick="go()">결정!</button>
+</div>
+
+<div class=pg id=p2>
+<div class=ttl>알에서 부화 중...</div>
+<span class=egg id=eg>🥚</span>
+<div style="font-size:11px;color:#0f380f;font-weight:700" id=et>알이 따뜻해요...</div>
+</div>
+
+<div class=pg id=p3>
+<div class=gt><span id=ga>나이: 0일</span><span id=gs>🐣 아기</span></div>
+<div class=gn id=gn>-</div>
+<div class=pet id=pc>🐰</div>
+<div class=bl id=bl>안녕! 잘 부탁해! 🐾</div>
+<div class=st>
+<div class=sr><span class=sl>🍗 배고픔</span><div class=sb><div class=sf style="width:80%;background:#e67e22" id=bh></div></div><span class=sv id=vh>80</span></div>
+<div class=sr><span class=sl>😊 행복</span><div class=sb><div class=sf style="width:70%;background:#f1c40f" id=bp></div></div><span class=sv id=vp>70</span></div>
+<div class=sr><span class=sl>🧼 청결</span><div class=sb><div class=sf style="width:90%;background:#3498db" id=bc></div></div><span class=sv id=vc>90</span></div>
+<div class=sr><span class=sl>⚡ 에너지</span><div class=sb><div class=sf style="width:80%;background:#9b59b6" id=be></div></div><span class=sv id=ve>80</span></div>
+<div class=sr><span class=sl>😰 스트레스</span><div class=sb><div class=sf style="width:20%;background:#e74c3c" id=bs></div></div><span class=sv id=vs>20</span></div>
+</div>
+<div class=ag>
+<button class=ab onclick="a('feed')"><span class=i>🍎</span><span class=l>먹이기</span></button>
+<button class=ab onclick="a('snack')"><span class=i>🍬</span><span class=l>간식</span></button>
+<button class=ab onclick="a('clean')"><span class=i>🛁</span><span class=l>씻기기</span></button>
+<button class=ab onclick="a('play')"><span class=i>🎮</span><span class=l>놀기</span></button>
+<button class=ab onclick="a('walk')"><span class=i>🚶</span><span class=l>산책</span></button>
+<button class=ab onclick="a('sleep')"><span class=i>💤</span><span class=l>재우기</span></button>
+</div></div>
+
+<div class=pg id=p4>
+<div class=dt>
+<div style="font-size:44px">😢</div>
+<h2 id=dn>-</h2><p>무지개다리를 건넜어요...</p>
+<p id=da style="color:#306230"></p>
+<button class=ob onclick="rst()" style="margin-top:12px">다시 시작</button>
+</div></div>
+
+</div><div class=db><div class=d></div><div class=d></div><div class=d></div></div></div>
+<script>
+const EM={rabbit:{normal:'🐰',happy:'🥰',sad:'🐰😢',sleep:'🐰💤'},turtle:{normal:'🐢',happy:'🐢✨',sad:'🐢😢',sleep:'🐢💤'},duck:{normal:'🐥',happy:'🐥✨',sad:'🐥😢',sleep:'🐥💤'}};
+const DEF={rabbit:'뭉치',turtle:'거북이',duck:'꽥꽥이'};
+let P=null,sp=null,gL=null,eL=null;
+function cl(v){return Math.max(0,Math.min(100,v));}
+function mood(){if(!P)return'normal';if(P.e<20)return'sleep';if(P.h<30||P.s>70)return'sad';if(P.h>70&&P.s<30)return'happy';return'normal';}
+function say(m){document.getElementById('bl').textContent=m;if(P)P.sa=Date.now();}
+function status(){
+  if(!P)return'';
+  if(P.e<15)return'너무 피곤해... 😴';if(P.f<15)return'배고파요... 🍽️';
+  if(P.c<20)return'씻고 싶어요! 🛁';if(P.s>80)return'스트레스 받아요! 😤';
+  if(P.h<20)return'같이 놀아줘... 😢';if(P.h>80)return'너무 행복해! 🎉';
+  return['뭐하고 싶어~','같이 있어줘서 좋아!','오늘 날씨 좋다~','산책 가고 싶다!'][Math.floor(Math.random()*4)];
+}
+function ui(){
+  if(!P)return;
+  const m=mood(),em=EM[P.sp];
+  document.getElementById('pc').textContent=em[m]||em.normal;
+  document.getElementById('gn').textContent=P.name;
+  document.getElementById('gs').textContent={baby:'🐣 아기',teen:'🌱 청소년',adult:'⭐ 어른'}[P.stage];
+  document.getElementById('ga').textContent='나이: '+P.age+'일';
+  [['bh','vh',P.f],['bp','vp',P.h],['bc','vc',P.c],['be','ve',P.e],['bs','vs',P.s]].forEach(([b,v,val])=>{
+    document.getElementById(b).style.width=val+'%';document.getElementById(v).textContent=Math.round(val);
+  });
+  if(Date.now()-P.sa>9000)say(status());
+}
+function pg(id){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.getElementById(id).classList.add('on');}
+function pick(s){sp=s;document.getElementById('pv').textContent=EM[s].happy;document.getElementById('ni').value=DEF[s];pg('p1');}
+function go(){
+  const name=document.getElementById('ni').value.trim()||'친구';
+  P={sp,name,stage:'baby',age:0,f:80,h:70,c:90,e:80,s:15,t:0,sa:0};
+  pg('p2');
+  let t=0;const msgs=['알이 따뜻해요...','알이 흔들려요! 🥚','뭔가 나오려 해요!','짠! 🐣'];
+  const eg=document.getElementById('eg'),et=document.getElementById('et');
+  clearInterval(eL);
+  eL=setInterval(()=>{t++;if(t>12)eg.textContent='🐣';et.textContent=msgs[Math.min(Math.floor(t/4),3)];
+    if(t>=16){clearInterval(eL);setTimeout(()=>{pg('p3');ui();run();},400);}
+  },350);
+}
+function run(){
+  clearInterval(gL);
+  gL=setInterval(()=>{
+    if(!P)return;
+    P.t++;P.f=cl(P.f-2);P.h=cl(P.h-1);P.c=cl(P.c-1);P.e=cl(P.e-1);P.s=cl(P.s+1);
+    if(P.f<20){P.s=cl(P.s+2);P.h=cl(P.h-1);}if(P.c<20)P.s=cl(P.s+2);
+    if(P.s>80){P.h=cl(P.h-1);P.e=cl(P.e-1);}
+    if(P.t%18===0){P.age++;
+      if(P.stage==='baby'&&P.age>=3){P.stage='teen';say(P.name+'이(가) 청소년이 됐어요! 🎊');}
+      else if(P.stage==='teen'&&P.age>=7){P.stage='adult';say(P.name+'이(가) 어른이 됐어요! 🌟');}
+    }
+    if((P.f<=0&&P.e<=0)||(P.s>=100&&P.h<=0)){die();return;}ui();
+  },8000);
+}
+const AC={
+  feed: ()=>{P.f=cl(P.f+25);P.e=cl(P.e+5);say('냠냠냠~ 맛있어! 🍎');},
+  snack:()=>{P.f=cl(P.f+12);P.h=cl(P.h+10);P.s=cl(P.s-5);say('간식이다! 최고야! 🍬');},
+  clean:()=>{P.c=cl(P.c+40);P.s=cl(P.s-5);say('뽀송뽀송~ 개운해! 🛁');},
+  play: ()=>{if(P.e<15){say('너무 피곤해... 😴');return;}P.h=cl(P.h+20);P.s=cl(P.s-15);P.e=cl(P.e-10);P.c=cl(P.c-5);say('같이 놀아서 너무 좋아! 🎮');},
+  walk: ()=>{if(P.e<20){say('에너지 부족해요... 😴');return;}P.h=cl(P.h+15);P.s=cl(P.s-20);P.e=cl(P.e-15);P.f=cl(P.f-5);P.c=cl(P.c-8);say('산책 최고! 기분 좋아~ 🚶');},
+  sleep:()=>{P.e=cl(P.e+40);P.s=cl(P.s-10);say('잘 잤다! 개운해~ ⚡');},
+};
+function a(x){if(!P)return;if(AC[x])AC[x]();ui();}
+function die(){clearInterval(gL);document.getElementById('dn').textContent=P.name;document.getElementById('da').textContent=P.age+'일 동안 함께 했어요';pg('p4');}
+function rst(){P=null;sp=null;clearInterval(gL);clearInterval(eL);document.getElementById('eg').textContent='🥚';pg('p0');}
+</script></body></html>
