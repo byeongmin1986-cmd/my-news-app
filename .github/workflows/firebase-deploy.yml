@@ -16,9 +16,9 @@ jobs:
           node-version: '20'
 
       - name: 서비스 계정 키 파일 생성
-        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > $HOME/sa.json
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /home/runner/sa.json
 
       - name: Firebase Hosting 배포
         run: npx firebase-tools@latest deploy --only hosting --project my-africa-project-3d79c
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/../sa.json
+          GOOGLE_APPLICATION_CREDENTIALS: /home/runner/sa.json
