@@ -10,6 +10,18 @@
     ],
     "rewrites": [
       {
+        "source": "/catch-game",
+        "destination": "/catch-game/index.html"
+      },
+      {
+        "source": "/rpg",
+        "destination": "/rpg/index.html"
+      },
+      {
+        "source": "/tribal-wars",
+        "destination": "/tribal-wars/index.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
