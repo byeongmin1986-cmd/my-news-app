@@ -215,11 +215,11 @@ const SWING_MS    = 380;
 const SWING_CD_MS = 480;
 
 const STAGES = [
-  { rabbits:2, turtles:2, time:42 },
-  { rabbits:3, turtles:2, time:48 },
-  { rabbits:3, turtles:3, time:52 },
-  { rabbits:4, turtles:3, time:58 },
-  { rabbits:5, turtles:4, time:65 },
+  { rabbits:3, turtles:2, squirrels:2, time:30 },
+  { rabbits:4, turtles:2, squirrels:3, time:35 },
+  { rabbits:5, turtles:3, squirrels:3, time:40 },
+  { rabbits:5, turtles:3, squirrels:4, time:45 },
+  { rabbits:6, turtles:4, squirrels:5, time:50 },
 ];
 
 // ── DOM ───────────────────────────────────────────────────────────────────
@@ -360,8 +360,9 @@ function startStage() {
 
   P.x = W/2; P.y = H/2; P.dir = 0; P.swingT = -1; P.swingCd = 0;
   animals = [];
-  for (let i=0; i<def.rabbits; i++) animals.push(makeAnimal('rabbit'));
-  for (let i=0; i<def.turtles; i++) animals.push(makeAnimal('turtle'));
+  for (let i=0; i<def.rabbits;   i++) animals.push(makeAnimal('rabbit'));
+  for (let i=0; i<def.turtles;   i++) animals.push(makeAnimal('turtle'));
+  for (let i=0; i<def.squirrels; i++) animals.push(makeAnimal('squirrel'));
   particles = []; swingHits = new Set();
 
   hud.classList.add('on');
@@ -400,20 +401,20 @@ function makeAnimal(type) {
   } while (dist(x,y,P.x,P.y) < 180);
 
   const rb = type === 'rabbit';
+  const sq = type === 'squirrel';
   return {
     type, x, y, vx:0, vy:0,
     dir: Math.random() * Math.PI * 2,
-    tx: x, ty: y,         // wander target
+    tx: x, ty: y,
     wanderCd: 0,
-    speed:     rb ? 160 : 65,
-    fleeSpd:   rb ? 230 : 100,
-    detectR:   rb ? 165 : 105,
-    fleeR:     rb ?  95 :  65,
-    size:      rb ?  19 :  24,
-    state: 'wander',      // wander | alert | flee | caught
+    speed:     rb ? 160 : sq ? 115 : 65,
+    fleeSpd:   rb ? 230 : sq ? 185 : 100,
+    detectR:   rb ? 165 : sq ? 135 : 105,
+    fleeR:     rb ?  95 : sq ?  78 :  65,
+    size:      rb ?  19 : sq ?  17 :  24,
+    state: 'wander',
     caughtT: 0,
     bobT: Math.random() * Math.PI * 2,
-    // eye blink
     blinkT: 0, blinkCd: 2 + Math.random() * 3,
   };
 }
@@ -523,7 +524,8 @@ function moveAnimals(dt) {
 
     let tx, ty, spd;
     if (a.state === 'flee') {
-      const ang = Math.atan2(a.y-P.y, a.x-P.x) + (Math.random()-0.5)*0.4;
+      const zigzag = a.type === 'squirrel' ? Math.sin(a.bobT * 4) * 0.8 : 0;
+      const ang = Math.atan2(a.y-P.y, a.x-P.x) + (Math.random()-0.5)*0.4 + zigzag;
       tx = a.x + Math.cos(ang)*300; ty = a.y + Math.sin(ang)*300;
       spd = a.fleeSpd;
     } else if (a.state === 'alert') {
@@ -582,7 +584,7 @@ function tickSwing(dt) {
 
 function catchAnimal(a) {
   a.state = 'caught'; a.caughtT = 0;
-  const pts = a.type === 'rabbit' ? 100 : 150;
+  const pts = a.type === 'rabbit' ? 100 : a.type === 'squirrel' ? 120 : 150;
   score += pts; hudScore.textContent = score;
   spawnParticles(a);
   scorePopup(a.x, a.y-28, `+${pts}`);
@@ -598,7 +600,9 @@ function tickParticles(dt) {
 }
 
 function spawnParticles(a) {
-  const col = a.type === 'rabbit' ? ['#FFD700','#fff','#ffb3ba'] : ['#8BC34A','#FFD700','#fff'];
+  const col = a.type === 'rabbit'   ? ['#FFD700','#fff','#ffb3ba']
+            : a.type === 'squirrel' ? ['#FF6D00','#FFD700','#BCAAA4']
+            :                         ['#8BC34A','#FFD700','#fff'];
   for (let i=0; i<10; i++) {
     const ang = Math.random()*Math.PI*2, spd = 80+Math.random()*160;
     particles.push({
@@ -650,45 +654,81 @@ function drawPlayer() {
   ctx.save();
   ctx.translate(P.x, P.y);
 
-  // shadow
-  shadow(0, 20, 20, 7);
+  shadow(0, 22, 22, 8);
 
-  // club (drawn behind body)
+  // Fluffy tail (drawn first, behind body)
+  const ta = P.dir + Math.PI;
+  const tailX = Math.cos(ta)*17, tailY = Math.sin(ta)*17;
+  ctx.fillStyle = '#E65100';
+  ctx.beginPath(); ctx.arc(tailX, tailY, 13, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#FF8A65';
+  ctx.beginPath(); ctx.arc(tailX, tailY, 9, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#FFF9C4';
+  ctx.beginPath(); ctx.arc(tailX+Math.cos(ta)*5, tailY+Math.sin(ta)*5, 6, 0, Math.PI*2); ctx.fill();
+
+  // Club
   const ca = P.dir + swA;
-  const cx1 = Math.cos(ca)*16, cy1 = Math.sin(ca)*16;
-  const cx2 = Math.cos(ca)*60, cy2 = Math.sin(ca)*60;
+  const cx2 = Math.cos(ca)*58, cy2 = Math.sin(ca)*58;
   ctx.strokeStyle='#6D4C41'; ctx.lineWidth=5; ctx.lineCap='round';
-  ctx.beginPath(); ctx.moveTo(cx1,cy1); ctx.lineTo(cx2,cy2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(Math.cos(ca)*15, Math.sin(ca)*15); ctx.lineTo(cx2,cy2); ctx.stroke();
   ctx.fillStyle='#4E342E';
   ctx.beginPath(); ctx.arc(cx2,cy2,9,0,Math.PI*2); ctx.fill();
   ctx.strokeStyle='#3E2723'; ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.arc(cx2,cy2,9,0,Math.PI*2); ctx.stroke();
 
-  // body
-  ctx.fillStyle='#FF7043';
-  ctx.beginPath(); ctx.arc(0,2,18,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle='#E64A19'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.arc(0,2,18,0,Math.PI*2); ctx.stroke();
+  // Body (orange)
+  ctx.fillStyle = '#F57C00';
+  ctx.beginPath(); ctx.arc(0,1,18,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#E64A19'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(0,1,18,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle='#FFF9C4';
+  ctx.beginPath(); ctx.ellipse(0,5,9,12,0,0,Math.PI*2); ctx.fill();
 
-  // head bubble (shifted in facing direction)
-  const hx = Math.cos(P.dir)*11, hy = Math.sin(P.dir)*11;
-  ctx.fillStyle='#FFCCBC';
-  ctx.beginPath(); ctx.arc(hx, hy, 10, 0, Math.PI*2); ctx.fill();
-  ctx.strokeStyle='#FFAB91'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.arc(hx, hy, 10, 0, Math.PI*2); ctx.stroke();
-
-  // eyes
-  const e1a = P.dir+0.45, e2a = P.dir-0.45;
+  // Head
+  const hx = Math.cos(P.dir)*13, hy = Math.sin(P.dir)*13;
+  const perpL = P.dir-Math.PI/2, perpR = P.dir+Math.PI/2;
+  const elx = hx+Math.cos(perpL)*8, ely = hy+Math.sin(perpL)*8;
+  const erx = hx+Math.cos(perpR)*8, ery = hy+Math.sin(perpR)*8;
+  // Pointy ears
+  [[-1,elx,ely,perpL],[1,erx,ery,perpR]].forEach(([,ex,ey,pa])=>{
+    ctx.fillStyle='#F57C00';
+    ctx.beginPath();
+    ctx.moveTo(ex-Math.cos(P.dir)*4,ey-Math.sin(P.dir)*4);
+    ctx.lineTo(ex+Math.cos(P.dir)*4,ey+Math.sin(P.dir)*4);
+    ctx.lineTo(ex+Math.cos(pa)*12,  ey+Math.sin(pa)*12);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#FF8A80';
+    ctx.beginPath();
+    ctx.moveTo(ex-Math.cos(P.dir)*2,ey-Math.sin(P.dir)*2);
+    ctx.lineTo(ex+Math.cos(P.dir)*2,ey+Math.sin(P.dir)*2);
+    ctx.lineTo(ex+Math.cos(pa)*8,   ey+Math.sin(pa)*8);
+    ctx.closePath(); ctx.fill();
+  });
+  // Head circle
+  ctx.fillStyle='#F57C00';
+  ctx.beginPath(); ctx.arc(hx,hy,11,0,Math.PI*2); ctx.fill();
+  // Snout
+  const sx=hx+Math.cos(P.dir)*6.5, sy=hy+Math.sin(P.dir)*6.5;
+  ctx.fillStyle='#FFF9C4';
+  ctx.beginPath(); ctx.ellipse(sx,sy,4.5,3.5,P.dir,0,Math.PI*2); ctx.fill();
+  // Eyes with shine
+  const e1a=P.dir-0.48, e2a=P.dir+0.48;
+  ctx.fillStyle='#222';
+  ctx.beginPath(); ctx.arc(hx+Math.cos(e1a)*5.5,hy+Math.sin(e1a)*5.5,2.5,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(hx+Math.cos(e2a)*5.5,hy+Math.sin(e2a)*5.5,2.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.8)';
+  ctx.beginPath(); ctx.arc(hx+Math.cos(e1a)*5.5+0.8,hy+Math.sin(e1a)*5.5-0.8,1,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(hx+Math.cos(e2a)*5.5+0.8,hy+Math.sin(e2a)*5.5-0.8,1,0,Math.PI*2); ctx.fill();
+  // Nose
   ctx.fillStyle='#333';
-  ctx.beginPath(); ctx.arc(hx+Math.cos(e1a)*4.5, hy+Math.sin(e1a)*4.5, 2.2,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(hx+Math.cos(e2a)*4.5, hy+Math.sin(e2a)*4.5, 2.2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(sx+Math.cos(P.dir)*2.8,sy+Math.sin(P.dir)*2.8,2.2,0,Math.PI*2); ctx.fill();
 
-  // swing arc flash
+  // Swing arc flash
   if (P.swingT >= 0) {
     const prog = P.swingT/SWING_MS;
     ctx.globalAlpha = (1-prog)*0.45;
     ctx.strokeStyle='#FFD700'; ctx.lineWidth=3.5;
-    ctx.beginPath(); ctx.arc(0,0,SWING_R, P.dir-SWING_HALF, P.dir+SWING_HALF); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,SWING_R,P.dir-SWING_HALF,P.dir+SWING_HALF); ctx.stroke();
     ctx.globalAlpha=1;
   }
   ctx.restore();
@@ -706,8 +746,9 @@ function drawAnimal(a) {
   ctx.save();
   ctx.translate(a.x, a.y + Math.sin(a.bobT)*2.5);
   shadow(1, a.size-1, a.size*0.65, a.size*0.22);
-  if (a.type === 'rabbit') drawRabbit(a);
-  else drawTurtle(a);
+  if (a.type === 'rabbit')        drawRabbit(a);
+  else if (a.type === 'squirrel') drawSquirrel(a);
+  else                            drawTurtle(a);
   ctx.restore();
 }
 
@@ -804,6 +845,66 @@ function drawTurtle(a) {
   }
 }
 
+function drawSquirrel(a) {
+  const fl = Math.cos(a.dir) < 0 ? -1 : 1;
+  ctx.scale(fl, 1);
+
+  // Bushy tail (gray)
+  ctx.fillStyle='#90A4AE';
+  ctx.beginPath(); ctx.ellipse(-13,5,9,16,0.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#CFD8DC';
+  ctx.beginPath(); ctx.ellipse(-13,5,6,11,0.5,0,Math.PI*2); ctx.fill();
+
+  // Body (brown)
+  ctx.fillStyle='#8D6E63';
+  ctx.beginPath(); ctx.ellipse(0,3,11,14,0,0,Math.PI*2); ctx.fill();
+  // Stripes
+  ctx.strokeStyle='#6D4C41'; ctx.lineWidth=1.8;
+  ctx.beginPath(); ctx.moveTo(-3,-8); ctx.lineTo(-3,14); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(3,-8);  ctx.lineTo(3,14);  ctx.stroke();
+  // Belly
+  ctx.fillStyle='#D7CCC8';
+  ctx.beginPath(); ctx.ellipse(2,5,5,7,0,0,Math.PI*2); ctx.fill();
+
+  // Head
+  ctx.fillStyle='#8D6E63';
+  ctx.beginPath(); ctx.arc(4,-12,10,0,Math.PI*2); ctx.fill();
+  // Round ears
+  ctx.fillStyle='#8D6E63';
+  ctx.beginPath(); ctx.arc(-2,-20,5,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(9,-20,5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#FFCCBC';
+  ctx.beginPath(); ctx.arc(-2,-20,3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(9,-20,3,0,Math.PI*2); ctx.fill();
+
+  // Big eye
+  const blink = a.blinkT < 0.07;
+  if (blink) {
+    ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(6,-13); ctx.lineTo(11,-13); ctx.stroke();
+  } else {
+    ctx.fillStyle='#1a1a1a';
+    ctx.beginPath(); ctx.arc(8,-13,4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.7)';
+    ctx.beginPath(); ctx.arc(9,-14,1.5,0,Math.PI*2); ctx.fill();
+  }
+  // Nose
+  ctx.fillStyle='#555';
+  ctx.beginPath(); ctx.arc(13,-11,2,0,Math.PI*2); ctx.fill();
+
+  // Acorn (when wandering)
+  if (a.state === 'wander') {
+    ctx.fillStyle='#FF8F00';
+    ctx.beginPath(); ctx.arc(9,-5,4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#6D4C41';
+    ctx.beginPath(); ctx.arc(9,-8.5,4.5,0,Math.PI); ctx.fill();
+  }
+  if (a.state === 'flee') {
+    ctx.fillStyle='#ff5722'; ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('!!', 0,-36);
+  }
+}
+
 function drawCaughtSpin(a) {
   const t = Math.min(a.caughtT/600, 1);
   ctx.save();
@@ -813,7 +914,7 @@ function drawCaughtSpin(a) {
   ctx.scale(1-t*0.9, 1-t*0.9);
   ctx.font = a.type==='rabbit' ? '38px serif' : '40px serif';
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(a.type==='rabbit' ? '🐰' : '🐢', 0, 0);
+  ctx.fillText(a.type==='rabbit' ? '🐰' : a.type==='squirrel' ? '🐿️' : '🐢', 0, 0);
   ctx.restore();
 }
 
@@ -840,9 +941,10 @@ function refreshLives() {
   hudLives.textContent = '❤️'.repeat(lives) + '🖤'.repeat(Math.max(0,3-lives));
 }
 function refreshRemain() {
-  const r = animals.filter(a=>a.type==='rabbit'&&a.state!=='caught').length;
-  const t = animals.filter(a=>a.type==='turtle'&&a.state!=='caught').length;
-  hudRemain.textContent = `🐰${r}  🐢${t}`;
+  const r = animals.filter(a=>a.type==='rabbit'  &&a.state!=='caught').length;
+  const s = animals.filter(a=>a.type==='squirrel'&&a.state!=='caught').length;
+  const t = animals.filter(a=>a.type==='turtle'  &&a.state!=='caught').length;
+  hudRemain.textContent = `🐰${r} 🐿️${s} 🐢${t}`;
 }
 
 function scorePopup(x, y, txt) {
