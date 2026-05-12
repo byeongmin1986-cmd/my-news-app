@@ -23,7 +23,7 @@ body{background:#1a1a2e;color:#eee;font-family:sans-serif;max-width:420px;margin
 #main{padding:10px}
 .ztit{text-align:center;font-size:15px;font-weight:bold;color:#c9a227;margin-bottom:8px;padding:6px;background:#161b22;border-radius:6px}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.mc{background:#161b22;border:2px solid #30363d;border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:transform .1s,border-color .2s;position:relative;overflow:hidden}
+.mc{background:#161b22;border:2px solid #30363d;border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:transform .1s,border-color .2s}
 .mc:not(.dead):hover{border-color:#4a9eff;transform:scale(1.03)}
 .mc:not(.dead):active{transform:scale(.94)}
 .mc.dead{opacity:.3;cursor:not-allowed;filter:grayscale(1)}
@@ -35,6 +35,7 @@ body{background:#1a1a2e;color:#eee;font-family:sans-serif;max-width:420px;margin
 .mhf{background:#f55;height:100%;border-radius:3px;transition:width .2s}
 .mst{font-size:10px;color:#aaa}
 .rdt{font-size:11px;color:#f90;margin-top:3px}
+.mrank{font-size:9px;color:#f90;margin-top:2px}
 #log{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px;height:130px;overflow-y:auto;margin-bottom:10px}
 .ll{padding:2px 0;font-size:11px;border-bottom:1px solid #1c2128;line-height:1.4}
 .la{color:#ff8080}.lb{color:#88c0ff}.lh{color:#80ff80}.lg{color:#ffd700}.llv{color:#ffd700;font-weight:bold;font-size:12px}
@@ -46,10 +47,11 @@ body{background:#1a1a2e;color:#eee;font-family:sans-serif;max-width:420px;margin
 .pbtn{display:block;width:100%;padding:8px;background:#8b0000;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;margin-bottom:8px}
 .shopg{display:grid;gap:8px}
 .si{background:#161b22;border:2px solid #30363d;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px}
-.sico{font-size:28px;width:36px;text-align:center;flex-shrink:0}
+.si.t2{border-color:#336633}.si.t3{border-color:#663333}.si.t4{border-color:#664400}.si.t5{border-color:#440066}
+.sico{font-size:26px;width:32px;text-align:center;flex-shrink:0}
 .sinf{flex:1;min-width:0}.snm{font-size:13px;font-weight:bold}
-.sds{font-size:10px;color:#aaa;margin-top:2px}.spr{font-size:12px;color:#ffd700;font-weight:bold;margin-top:2px}
-.sbb{padding:6px 12px;background:#0f3460;color:#4a9eff;border:1px solid #4a9eff;border-radius:5px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.sds{font-size:10px;color:#aaa;margin-top:2px}.spr{font-size:11px;color:#ffd700;font-weight:bold;margin-top:2px}
+.sbb{padding:5px 10px;background:#0f3460;color:#4a9eff;border:1px solid #4a9eff;border-radius:5px;font-size:11px;font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .sbb:disabled{background:#1c2128;color:#444;border-color:#333;cursor:not-allowed}
 .ownl{font-size:10px;color:#80ff80;flex-shrink:0}
 .fdmg{position:fixed;font-size:18px;font-weight:bold;pointer-events:none;z-index:999;animation:fup 1s forwards}
@@ -61,6 +63,7 @@ body{background:#1a1a2e;color:#eee;font-family:sans-serif;max-width:420px;margin
 .lvbox h2{font-size:28px;color:#ffd700;margin-bottom:10px}
 .lvbox p{color:#eee;font-size:13px;line-height:1.7}
 .lvbox button{margin-top:14px;padding:10px 28px;background:#ffd700;color:#000;border:none;border-radius:6px;font-size:14px;font-weight:bold;cursor:pointer}
+.sh-sec{font-size:12px;color:#c9a227;font-weight:bold;margin:10px 0 4px;padding:4px 8px;background:#161b22;border-radius:4px}
 </style>
 </head>
 <body>
@@ -91,41 +94,132 @@ body{background:#1a1a2e;color:#eee;font-family:sans-serif;max-width:420px;margin
 </div>
 <script>
 'use strict';
+/* ===== ITEMS (5 tiers) ===== */
 var ITEMS={
-  stick:{n:'몽둥이',ico:'🪵',slot:'weapon',atk:3,def:0,desc:'ATK +3',price:0},
-  sword:{n:'칼',ico:'⚔️',slot:'weapon',atk:10,def:0,desc:'ATK +10',price:150},
-  helmet:{n:'투구',ico:'⛑️',slot:'helmet',atk:0,def:3,desc:'DEF +3',price:50},
-  armor:{n:'갑옷',ico:'🥋',slot:'armor',atk:0,def:5,desc:'DEF +5',price:100},
-  shoes:{n:'신발',ico:'👟',slot:'shoes',atk:1,def:2,desc:'ATK+1 DEF+2',price:70},
-  shield:{n:'방패',ico:'🛡️',slot:'shield',atk:0,def:8,desc:'DEF +8',price:120},
-  potion:{n:'빨간 물약',ico:'🧪',slot:null,heal:30,desc:'HP +30 회복',price:30}
+  stick:   {n:'몽둥이',   ico:'🪵',slot:'weapon',atk:3, def:0, desc:'ATK+3',        price:0,  req:0,  tier:1},
+  dagger:  {n:'단검',     ico:'🗡️',slot:'weapon',atk:8, def:0, desc:'ATK+8',        price:80, req:3,  tier:2},
+  sword:   {n:'칼',       ico:'⚔️',slot:'weapon',atk:16,def:0, desc:'ATK+16',       price:220,req:7,  tier:3},
+  axe:     {n:'전투도끼', ico:'🪓',slot:'weapon',atk:28,def:0, desc:'ATK+28',       price:500,req:12, tier:4},
+  longsw:  {n:'장검',     ico:'⚔️',slot:'weapon',atk:45,def:0, desc:'ATK+45',       price:1100,req:18,tier:5},
+  capL:    {n:'가죽모자', ico:'🎩',slot:'helmet', atk:0, def:3, desc:'DEF+3',        price:45, req:0,  tier:1},
+  helmet:  {n:'철투구',   ico:'⛑️',slot:'helmet', atk:0, def:7, desc:'DEF+7',        price:130,req:5,  tier:2},
+  greatH:  {n:'강철투구', ico:'🪖',slot:'helmet', atk:0, def:14,desc:'DEF+14',       price:320,req:11, tier:3},
+  kingH:   {n:'기사투구', ico:'👑',slot:'helmet', atk:2, def:22,desc:'ATK+2 DEF+22', price:750,req:17, tier:4},
+  dragonH: {n:'용사투구', ico:'🐲',slot:'helmet', atk:4, def:32,desc:'ATK+4 DEF+32', price:1800,req:25,tier:5},
+  leathA:  {n:'가죽갑옷', ico:'🧥',slot:'armor',  atk:0, def:4, desc:'DEF+4',        price:55, req:0,  tier:1},
+  chainA:  {n:'사슬갑옷', ico:'🥋',slot:'armor',  atk:0, def:10,desc:'DEF+10',       price:190,req:5,  tier:2},
+  plateA:  {n:'판금갑옷', ico:'🛡️',slot:'armor',  atk:0, def:20,desc:'DEF+20',       price:440,req:11, tier:3},
+  kingA:   {n:'기사갑옷', ico:'⚜️',slot:'armor',  atk:2, def:32,desc:'ATK+2 DEF+32', price:950,req:17, tier:4},
+  dragonA: {n:'용의갑옷', ico:'🐉',slot:'armor',  atk:5, def:48,desc:'ATK+5 DEF+48', price:2200,req:25,tier:5},
+  shoes:   {n:'천신발',   ico:'👟',slot:'shoes',  atk:1, def:2, desc:'ATK+1 DEF+2',  price:50, req:0,  tier:1},
+  boots:   {n:'가죽부츠', ico:'👢',slot:'shoes',  atk:2, def:5, desc:'ATK+2 DEF+5',  price:150,req:5,  tier:2},
+  ironB:   {n:'철제부츠', ico:'🥾',slot:'shoes',  atk:2, def:10,desc:'ATK+2 DEF+10', price:340,req:11, tier:3},
+  windB:   {n:'바람부츠', ico:'💨',slot:'shoes',  atk:4, def:16,desc:'ATK+4 DEF+16', price:780,req:17, tier:4},
+  dragonB: {n:'용의부츠', ico:'🐲',slot:'shoes',  atk:6, def:24,desc:'ATK+6 DEF+24', price:1700,req:25,tier:5},
+  woodSh:  {n:'나무방패', ico:'🪵',slot:'shield', atk:0, def:3, desc:'DEF+3',        price:45, req:0,  tier:1},
+  ironSh:  {n:'철방패',   ico:'🛡️',slot:'shield', atk:0, def:9, desc:'DEF+9',        price:210,req:5,  tier:2},
+  kSh:     {n:'기사방패', ico:'⚜️',slot:'shield', atk:0, def:18,desc:'DEF+18',       price:460,req:11, tier:3},
+  dragonSh:{n:'용사방패', ico:'🐲',slot:'shield', atk:2, def:28,desc:'ATK+2 DEF+28', price:1050,req:17,tier:4},
+  godSh:   {n:'신의방패', ico:'✨',slot:'shield', atk:3, def:42,desc:'ATK+3 DEF+42', price:2400,req:25,tier:5},
+  potion:  {n:'빨간 물약',ico:'🧪',slot:null,     heal:30,desc:'HP+30 회복',         price:30, req:0,  tier:1},
+  hpotion: {n:'큰 물약',  ico:'💊',slot:null,     heal:80,desc:'HP+80 회복',         price:100,req:8,  tier:2}
 };
-var SK=['sword','helmet','armor','shoes','shield','potion'];
-var MT={
-  rabbit:{n:'토끼',ico:'🐰',mhp:20,atk:4,def:1,exp:10,gold:[5,15]},
-  squirrel:{n:'다람쥐',ico:'🐿️',mhp:30,atk:7,def:3,exp:10,gold:[10,20]}
+
+/* ===== MONSTERS (10 types, 5 tiers) ===== */
+var MBASE={
+  rabbit:  {n:'토끼',    ico:'🐰',mhp:20, atk:4, def:1, exp:12,gold:[10,22], tier:1},
+  squirrel:{n:'다람쥐',  ico:'🐿️',mhp:28, atk:6, def:2, exp:14,gold:[14,28], tier:1},
+  wolf:    {n:'늑대',    ico:'🐺',mhp:50, atk:14,def:4, exp:22,gold:[28,55], tier:2},
+  fox:     {n:'여우',    ico:'🦊',mhp:40, atk:12,def:5, exp:19,gold:[22,45], tier:2},
+  boar:    {n:'멧돼지',  ico:'🐗',mhp:75, atk:22,def:8, exp:32,gold:[50,90], tier:3},
+  eagle:   {n:'독수리',  ico:'🦅',mhp:60, atk:24,def:6, exp:28,gold:[42,80], tier:3},
+  bear:    {n:'곰',      ico:'🐻',mhp:120,atk:32,def:12,exp:45,gold:[80,150],tier:4},
+  spider:  {n:'독거미',  ico:'🕷️',mhp:100,atk:30,def:10,exp:38,gold:[70,130],tier:4},
+  dragon:  {n:'미니용',  ico:'🐲',mhp:200,atk:48,def:20,exp:75,gold:[140,250],tier:5},
+  skeleton:{n:'해골전사',ico:'💀',mhp:160,atk:44,def:16,exp:62,gold:[120,220],tier:5}
 };
-var SPAWNS=['rabbit','rabbit','squirrel','squirrel'];
-var P,Ms;
-function defP(){return{lv:1,exp:0,hp:60,gold:0,pot:0,eq:{weapon:'stick',helmet:null,armor:null,shoes:null,shield:null}};}
-function mxHp(){return 50+P.lv*10;}
-function cAtk(){var b=5+P.lv,bonus=(P.eq.weapon?ITEMS[P.eq.weapon].atk||0:0)+(P.eq.shoes?ITEMS[P.eq.shoes].atk||0:0);return b+bonus;}
-function cDef(){var b=2+Math.floor(P.lv*0.5),bonus=0;['helmet','armor','shoes','shield'].forEach(function(s){if(P.eq[s])bonus+=ITEMS[P.eq[s]].def||0;});return b+bonus;}
-function xpNeed(lv){return Math.min(Math.round(100*Math.pow(2,lv-1)),50000000);}
-function mkMs(){return SPAWNS.map(function(t,i){var m=MT[t];return{id:i,t:t,n:m.n,ico:m.ico,mhp:m.mhp,hp:m.mhp,atk:m.atk,def:m.def,exp:m.exp,gold:m.gold,alive:true,rat:0};});}
-function save(){try{localStorage.setItem('rpg1',JSON.stringify({P:P,ms:Ms.map(function(m){return{hp:m.hp,alive:m.alive,rat:m.rat};})}));}catch(e){}}
-function load(){
-  try{var r=localStorage.getItem('rpg1');if(r){var d=JSON.parse(r);P=d.P;if(!P.pot)P.pot=0;if(P.eq.shoes===undefined)P.eq.shoes=null;Ms=mkMs();d.ms.forEach(function(s,i){if(Ms[i]){Ms[i].hp=s.hp;Ms[i].alive=s.alive;Ms[i].rat=s.rat;}});return;}}catch(e){}
-  P=defP();Ms=mkMs();
+
+function spawnSet(lv){
+  if(lv<5)  return['rabbit','rabbit','squirrel','squirrel'];
+  if(lv<10) return['wolf','wolf','fox','fox'];
+  if(lv<15) return['boar','boar','eagle','eagle'];
+  if(lv<20) return['bear','bear','spider','spider'];
+  return['dragon','dragon','skeleton','skeleton'];
 }
-var logs=[],curTab='hunt',busy=false;
+
+/* scale monster by player lv + how many times it has respawned */
+function scaleMon(tplId,lv,respawns){
+  var b=MBASE[tplId];
+  var lvSc=1+(lv-1)*0.18;
+  var timeSc=1+Math.min((respawns||0)*0.03,3.0); /* +3% each respawn, max +300% */
+  var sc=lvSc*timeSc;
+  return{
+    id:0,t:tplId,n:b.n,ico:b.ico,alive:true,rat:0,respawns:respawns||0,
+    mhp:Math.round(b.mhp*sc),
+    hp:Math.round(b.mhp*sc),
+    atk:Math.round(b.atk*sc),
+    def:Math.round(b.def*sc),
+    exp:b.exp+lv*3+Math.floor((respawns||0)*0.5),
+    gold:[Math.round(b.gold[0]*(1+lv*0.2+respawns*0.02)),
+          Math.round(b.gold[1]*(1+lv*0.2+respawns*0.02))]
+  };
+}
+
+/* ===== PLAYER ===== */
+var P;
+function defP(){return{lv:1,exp:0,hp:60,gold:0,pot:0,hpot:0,eq:{weapon:'stick',helmet:null,armor:null,shoes:null,shield:null}};}
+function mxHp(){return 50+P.lv*12;}
+function cAtk(){var b=6+P.lv,x=0;['weapon','shoes'].forEach(function(s){if(P.eq[s])x+=ITEMS[P.eq[s]].atk||0;});return b+x;}
+function cDef(){var b=2+Math.floor(P.lv*0.5),x=0;['helmet','armor','shoes','shield'].forEach(function(s){if(P.eq[s])x+=ITEMS[P.eq[s]].def||0;});return b+x;}
+function xpNeed(lv){return Math.min(Math.round(100*Math.pow(2,lv-1)),50000000);}
+
+/* ===== STATE ===== */
+var Ms=[],logs=[],curTab='hunt',busy=false;
+function rebuildMs(){
+  var set=spawnSet(P.lv);
+  Ms=set.map(function(t,i){var m=scaleMon(t,P.lv,0);m.id=i;return m;});
+}
+
+/* ===== SAVE/LOAD ===== */
+function save(){
+  try{localStorage.setItem('rpg3',JSON.stringify({
+    P:P,
+    ms:Ms.map(function(m){return{t:m.t,hp:m.hp,alive:m.alive,rat:m.rat,respawns:m.respawns};})
+  }));}catch(e){}
+}
+function load(){
+  try{
+    var r=localStorage.getItem('rpg3');
+    if(r){
+      var d=JSON.parse(r);P=d.P;
+      if(!P.pot)P.pot=0;if(!P.hpot)P.hpot=0;
+      Ms=d.ms.map(function(ms,i){
+        var m=scaleMon(ms.t,P.lv,ms.respawns||0);
+        m.id=i;m.hp=ms.hp;m.alive=ms.alive;m.rat=ms.rat;
+        return m;
+      });
+      return;
+    }
+  }catch(e){}
+  P=defP();rebuildMs();
+}
+
+/* ===== LOG ===== */
 function addLog(t,c){
-  logs.push({t:t,c:c||''});if(logs.length>100)logs.shift();
+  logs.push({t:t,c:c||''});if(logs.length>120)logs.shift();
   if(curTab!=='hunt')return;
   var el=document.getElementById('log');
   if(el){var d=document.createElement('div');d.className='ll '+(c||'');d.textContent=t;el.appendChild(d);el.scrollTop=9999;while(el.children.length>40)el.removeChild(el.firstChild);}
 }
-function float(x,y,t,col){var el=document.createElement('div');el.className='fdmg';el.textContent=t;el.style.cssText='left:'+(x-20)+'px;top:'+y+'px;color:'+(col||'#ff8080');document.body.appendChild(el);setTimeout(function(){el.remove();},1000);}
+
+/* ===== FLOAT DAMAGE ===== */
+function float(x,y,t,col){
+  var el=document.createElement('div');el.className='fdmg';el.textContent=t;
+  el.style.cssText='left:'+(x-20)+'px;top:'+y+'px;color:'+(col||'#ff8080');
+  document.body.appendChild(el);setTimeout(function(){el.remove();},1000);
+}
+
+/* ===== STATS UI ===== */
 function updStats(){
   var mhp=mxHp();
   document.getElementById('slv').textContent=P.lv;
@@ -138,7 +232,10 @@ function updStats(){
   document.getElementById('sexp').textContent=P.exp;
   document.getElementById('snxt').textContent=xpNeed(P.lv);
 }
+
+/* ===== BATTLE ===== */
 function rndG(arr){return arr[0]+Math.floor(Math.random()*(arr[1]-arr[0]+1));}
+
 function attack(i,e){
   if(busy)return;
   var m=Ms[i];if(!m||!m.alive)return;
@@ -163,96 +260,148 @@ function attack(i,e){
       P.hp=Math.max(0,P.hp-md);
       if(card){var r=card.getBoundingClientRect();float(r.left+r.width/2,r.top-10,'-'+md,'#ffaaaa');}
       addLog('🐾 '+m.n+'의 반격! '+md+' 데미지!','la');
-      if(P.hp<=0){P.hp=10;addLog('💀 쓰러졌다! HP 10으로 회복...','llv');}
+      if(P.hp<=0){
+        var lost=Math.max(1,Math.ceil(P.exp*0.05));
+        P.exp=Math.max(0,P.exp-lost);
+        P.hp=10;
+        addLog('💀 쓰러졌다! HP 10 회복, EXP -'+lost+'(5%) 손실!','llv');
+      }
       updStats();save();busy=false;
     },400);
   }
 }
+
 function updCard(i){
   var m=Ms[i],card=document.getElementById('mc'+i);if(!card)return;
   var hf=card.querySelector('.mhf');if(hf)hf.style.width=Math.max(0,Math.round(m.hp/m.mhp*100))+'%';
-  var st=card.querySelector('.mst');if(st)st.textContent='HP '+Math.max(0,m.hp)+'/'+m.mhp+' | ATK '+m.atk+' DEF '+m.def;
+  var st=card.querySelector('.mst');if(st)st.textContent='HP '+Math.max(0,m.hp)+'/'+m.mhp+' ATK:'+m.atk+' DEF:'+m.def;
 }
-function usePotion(){
-  if(!P.pot){addLog('물약이 없어요!','lb');return;}
+
+function usePotion(big){
+  var key=big?'hpot':'pot',heal=big?80:30;
+  if(!P[key]){addLog((big?'큰 물약':'물약')+'이 없어요!','lb');return;}
   var mhp=mxHp();if(P.hp>=mhp){addLog('HP가 이미 가득!','lb');return;}
-  P.pot--;var h=Math.min(30,mhp-P.hp);P.hp=Math.min(P.hp+30,mhp);
-  addLog('🧪 물약 사용! HP +'+Math.round(h)+' 회복','lh');
+  P[key]--;var h=Math.min(heal,mhp-P.hp);P.hp=Math.min(P.hp+heal,mhp);
+  addLog('🧪 '+(big?'큰 ':'')+'물약! HP +'+Math.round(h)+' 회복','lh');
   updStats();if(curTab==='hunt')rHunt();save();
 }
+
+/* ===== LEVEL UP ===== */
 function checkLv(){
   if(P.lv>=100)return;
   var n=xpNeed(P.lv);
-  if(P.exp>=n){P.exp-=n;P.lv++;P.hp=mxHp();addLog('🎉 레벨 업! Lv '+P.lv+'!','llv');showLv();checkLv();}
+  if(P.exp>=n){
+    P.exp-=n;P.lv++;P.hp=mxHp();
+    addLog('🎉 레벨 업! Lv '+P.lv+'!','llv');
+    var prev=spawnSet(P.lv-1),now=spawnSet(P.lv);
+    if(now[0]!==prev[0]){
+      addLog('🌟 새 구역! '+MBASE[now[0]].n+' 등장!','llv');
+      rebuildMs();
+    }
+    showLv();checkLv();
+  }
 }
 function showLv(){
   document.getElementById('lvtxt').innerHTML='Lv <b style="color:#ffd700;font-size:20px">'+P.lv+'</b>이 되었습니다!<br>⚔️ ATK: '+cAtk()+' | 🛡️ DEF: '+cDef()+'<br>❤️ 최대 HP: '+mxHp()+' (전부 회복!)';
   document.getElementById('lvov').classList.add('on');
 }
 function closeLv(){document.getElementById('lvov').classList.remove('on');render();}
+
+/* ===== HUNT TAB ===== */
 function rHunt(){
-  var h='<div class="ztit">⚔️ 사냥터</div>';
-  h+='<div class="eqb"><div class="eqt">🎒 장착 중</div><div class="eqs">';
+  var h='<div class="ztit">⚔️ 사냥터 (레벨 '+P.lv+'구역)</div>';
+  h+='<div class="eqb"><div class="eqt">🎒 장착</div><div class="eqs">';
   var SN={weapon:'무기',helmet:'투구',armor:'갑옷',shoes:'신발',shield:'방패'};
   ['weapon','helmet','armor','shoes','shield'].forEach(function(s){var e=P.eq[s];h+='<span class="eqsl'+(e?' eq':'')+'">'+SN[s]+':'+(e?ITEMS[e].ico+ITEMS[e].n:'없음')+'</span>';});
   h+='</div></div>';
-  if(P.pot>0)h+='<button class="pbtn" onclick="usePotion()">🧪 빨간 물약 사용 ('+P.pot+'개)</button>';
+  if(P.pot>0)h+='<button class="pbtn" onclick="usePotion(false)">🧪 물약 사용 ('+P.pot+'개)</button>';
+  if(P.hpot>0)h+='<button class="pbtn" style="background:#600060" onclick="usePotion(true)">💊 큰 물약 사용 ('+P.hpot+'개)</button>';
   h+='<div class="mgrid">';
   Ms.forEach(function(m,i){
     var pct=m.alive?Math.round(m.hp/m.mhp*100):0;
-    var rdt=(!m.alive&&m.rat)?'<div class="rdt">⏱ '+Math.max(0,Math.ceil((m.rat-Date.now())/1000))+'초 후 재생</div>':'';
+    var rdt=(!m.alive&&m.rat)?'<div class="rdt">⏱ '+Math.max(0,Math.ceil((m.rat-Date.now())/1000))+'초</div>':'';
+    var rnk=m.respawns>0?'<div class="mrank">강화 +'+m.respawns+' ('+m.atk+'ATK/'+m.def+'DEF)</div>':'';
     h+='<div class="mc'+(m.alive?'':' dead')+'" id="mc'+i+'" onclick="attack('+i+',event)">'
       +'<span class="mico">'+m.ico+'</span><div class="mnm">'+m.n+'</div>'
       +'<div class="mhb"><div class="mhf" style="width:'+pct+'%"></div></div>'
-      +'<div class="mst">HP '+Math.max(0,m.hp)+'/'+m.mhp+' | ATK '+m.atk+' DEF '+m.def+'</div>'
-      +rdt+'</div>';
+      +'<div class="mst">HP '+Math.max(0,m.hp)+'/'+m.mhp+'</div>'+rnk+rdt+'</div>';
   });
   h+='</div><div id="log">';
   var ll=logs.slice(-30);
-  if(!ll.length)ll=[{t:'몬스터를 눌러서 공격하세요!',c:'lb'}];
+  if(!ll.length)ll=[{t:'몬스터를 클릭해서 공격!',c:'lb'}];
   ll.forEach(function(l){h+='<div class="ll '+l.c+'">'+l.t+'</div>';});
   h+='</div>';
   document.getElementById('main').innerHTML=h;
   var el=document.getElementById('log');if(el)el.scrollTop=9999;
 }
+
+/* ===== SHOP TAB ===== */
+var TNAMES=['','⚪ 기본','🟢 고급','🔵 희귀','🟠 영웅','🔴 전설'];
 function rShop(){
   var h='<div class="ztit">🏪 상점</div>';
-  h+='<div style="text-align:center;margin-bottom:10px;font-size:13px;color:#aaa">💰 보유 골드: <b style="color:#ffd700">'+P.gold+'G</b>'+(P.pot?' | 🧪 물약 '+P.pot+'개':'')+'</div>';
-  h+='<div class="shopg">';
-  SK.forEach(function(id){
+  h+='<div style="text-align:center;margin-bottom:8px;font-size:13px;color:#aaa">💰 <b style="color:#ffd700">'+P.gold+'G</b>';
+  if(P.pot)h+=' | 🧪'+P.pot;if(P.hpot)h+=' | 💊'+P.hpot;
+  h+='</div><div class="shopg">';
+  var shown=Object.keys(ITEMS).filter(function(id){return ITEMS[id].price>0&&ITEMS[id].req<=P.lv;});
+  shown.sort(function(a,b){return (ITEMS[a].req-ITEMS[b].req)||((ITEMS[a].slot||'z').localeCompare(ITEMS[b].slot||'z'));});
+  var lastTier=0;
+  shown.forEach(function(id){
     var it=ITEMS[id];
+    if(it.tier!==lastTier){h+='<div class="sh-sec">'+TNAMES[it.tier]+' 등급</div>';lastTier=it.tier;}
     var owned=it.slot&&(P.eq[it.slot]===id);
     var isC=!it.slot;
     var ok=P.gold>=it.price&&(!owned||isC);
-    h+='<div class="si"><div class="sico">'+it.ico+'</div><div class="sinf"><div class="snm">'+it.n+'</div><div class="sds">'+it.desc+'</div><div class="spr">'+it.price+'G</div></div>';
-    if(owned&&!isC)h+='<span class="ownl">✅ 장착됨</span>';
+    h+='<div class="si t'+it.tier+'"><div class="sico">'+it.ico+'</div>'
+      +'<div class="sinf"><div class="snm">'+it.n+'</div><div class="sds">'+it.desc+(it.req?' [Lv'+it.req+'~]':'')+'</div><div class="spr">'+it.price+'G</div></div>';
+    if(owned&&!isC)h+='<span class="ownl">✅ 장착</span>';
     else h+='<button class="sbb"'+(ok?'':' disabled')+' onclick="buy(\''+id+'\')">구매</button>';
     h+='</div>';
   });
-  h+='</div><div style="text-align:center;margin-top:16px"><button onclick="if(confirm(\'처음부터 시작할까요?\')){localStorage.removeItem(\'rpg1\');location.reload();}" style="padding:6px 16px;background:#333;color:#888;border:none;border-radius:4px;font-size:11px;cursor:pointer">처음부터 시작</button></div>';
+  h+='</div><div style="text-align:center;margin-top:16px"><button onclick="if(confirm(\'처음부터?\')) {localStorage.removeItem(\'rpg3\');location.reload();}" style="padding:6px 16px;background:#333;color:#888;border:none;border-radius:4px;font-size:11px;cursor:pointer">처음부터 시작</button></div>';
   document.getElementById('main').innerHTML=h;
 }
+
 function buy(id){
   var it=ITEMS[id];if(P.gold<it.price)return;
   P.gold-=it.price;
-  if(!it.slot){P.pot=(P.pot||0)+1;addLog('🧪 물약 구매! (보유 '+P.pot+'개)','lg');}
-  else{P.eq[it.slot]=id;addLog('🛒 '+it.n+' 장착! '+it.desc,'lg');}
+  if(!it.slot){
+    var key=it.heal>50?'hpot':'pot';
+    P[key]=(P[key]||0)+1;
+    addLog(it.ico+' '+it.n+' 구매!','lg');
+  }else{P.eq[it.slot]=id;addLog('🛒 '+it.n+' 장착! '+it.desc,'lg');}
   updStats();rShop();save();
 }
+
 function render(){if(curTab==='hunt')rHunt();else rShop();updStats();}
+
+/* ===== RESPAWN TIMER (monsters get stronger each respawn) ===== */
 setInterval(function(){
   var now=Date.now(),ch=false;
   Ms.forEach(function(m,i){
     if(!m.alive&&m.rat){
-      if(now>=m.rat){var t=MT[m.t];m.hp=t.mhp;m.alive=true;m.rat=0;ch=true;addLog('🌟 '+m.n+'이(가) 다시 나타났다!','lb');}
-      else if(curTab==='hunt'){var rd=document.querySelector('#mc'+i+' .rdt');if(rd)rd.textContent='⏱ '+Math.max(0,Math.ceil((m.rat-now)/1000))+'초 후 재생';}
+      if(now>=m.rat){
+        var rs=(m.respawns||0)+1;
+        var nm=scaleMon(m.t,P.lv,rs);
+        nm.id=i;Ms[i]=nm;ch=true;
+        addLog('🌟 '+nm.n+' 재생! (강화+'+rs+')','lb');
+        if(i===0)activeNewMons=true;
+      }else if(curTab==='hunt'){
+        var rd=document.querySelector('#mc'+i+' .rdt');
+        if(rd)rd.textContent='⏱ '+Math.max(0,Math.ceil((m.rat-now)/1000))+'초';
+      }
     }
   });
   if(ch&&curTab==='hunt')rHunt();
 },500);
+
 document.querySelectorAll('.tbtn').forEach(function(b){
-  b.onclick=function(){curTab=b.dataset.tab;document.querySelectorAll('.tbtn').forEach(function(x){x.classList.remove('on');});b.classList.add('on');render();};
+  b.onclick=function(){
+    curTab=b.dataset.tab;
+    document.querySelectorAll('.tbtn').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');render();
+  };
 });
+
 load();render();setInterval(save,30000);
 </script>
 </body>
