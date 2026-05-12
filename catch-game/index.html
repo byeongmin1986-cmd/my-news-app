@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>동물 잡기!</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none; -webkit-user-select: none;
+    }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #1b3a1b;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    canvas { display: block; touch-action: none; }
+
+    /* ── Screens ───────────────────────────────────────────────────── */
+    .screen {
+      display: none; position: fixed; inset: 0;
+      align-items: center; justify-content: center;
+      flex-direction: column; z-index: 20;
+    }
+    .screen.active { display: flex; }
+
+    /* Title */
+    #title-screen { background: linear-gradient(160deg, #1b4d1b 0%, #2e7d32 60%, #1b3a1b 100%); }
+    .t-logo  { font-size: 56px; line-height: 1; margin-bottom: 4px; }
+    .t-title { font-size: 36px; font-weight: 900; color: #fff;
+               text-shadow: 0 3px 0 #1a4a1a, 0 6px 14px rgba(0,0,0,.5); margin-bottom: 6px; }
+    .t-sub   { font-size: 15px; color: #a5d6a7; margin-bottom: 44px; }
+    .t-hint  { font-size: 12px; color: #81c784; margin-top: 18px; }
+
+    /* Overlay (stage clear / game over) */
+    .ov-bg { background: rgba(0,0,0,.72); backdrop-filter: blur(3px); }
+    .ov-box {
+      background: #fff; border-radius: 22px;
+      padding: 34px 52px; text-align: center;
+      box-shadow: 0 12px 48px rgba(0,0,0,.55); min-width: 290px;
+    }
+    .ov-icon  { font-size: 52px; margin-bottom: 6px; }
+    .ov-title { font-size: 26px; font-weight: 900; color: #222; margin-bottom: 4px; }
+    .ov-sub   { font-size: 14px; color: #666; margin-bottom: 6px; }
+    .ov-pts   { font-size: 24px; font-weight: bold; color: #e65100; margin-bottom: 22px; }
+
+    /* Buttons */
+    .btn {
+      padding: 13px 38px; font-size: 18px; font-weight: bold;
+      background: #e65100; color: #fff; border: none; border-radius: 50px; cursor: pointer;
+      box-shadow: 0 4px 0 #bf360c, 0 7px 16px rgba(0,0,0,.3);
+      transition: transform .1s, box-shadow .1s;
+    }
+    .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #bf360c, 0 3px 8px rgba(0,0,0,.3); }
+
+    /* ── HUD ───────────────────────────────────────────────────────── */
+    #hud {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+      padding: 8px 16px;
+      background: linear-gradient(180deg, rgba(0,0,0,.65) 0%, rgba(0,0,0,0) 100%);
+      align-items: center; justify-content: space-between;
+    }
+    #hud.on { display: flex; }
+    .hud-stage { color: #a5d6a7; font-size: 13px; font-weight: bold; }
+    .hud-left  { display: flex; flex-direction: column; gap: 1px; }
+    .hud-remain{ color: #fff; font-size: 15px; }
+    .hud-timer { font-size: 24px; font-weight: 900; color: #ff6b6b;
+                 font-variant-numeric: tabular-nums; }
+    .hud-score { color: #FFD700; font-size: 17px; font-weight: bold; text-align: right; }
+    .hud-lives { font-size: 17px; text-align: right; }
+
+    /* ── Touch Controls ────────────────────────────────────────────── */
+    #tc {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      height: 150px; z-index: 10; pointer-events: none;
+    }
+    #tc.on { display: block; }
+
+    #joy-zone {
+      position: absolute; left: 0; bottom: 0;
+      width: 50%; height: 150px;
+      pointer-events: all;
+    }
+    #joy-base {
+      position: absolute; left: 30px; bottom: 30px;
+      width: 96px; height: 96px; border-radius: 50%;
+      background: rgba(255,255,255,.12);
+      border: 2px solid rgba(255,255,255,.28);
+    }
+    #joy-knob {
+      position: absolute; left: 30px; bottom: 30px;
+      width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(255,255,255,.45);
+      border: 2px solid rgba(255,255,255,.8);
+      transform: translate(27px, 27px); /* center in base */
+    }
+
+    #atk-btn {
+      position: absolute; right: 28px; bottom: 28px;
+      width: 80px; height: 80px; border-radius: 50%;
+      background: rgba(230,81,0,.82);
+      border: 3px solid rgba(255,255,255,.6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; pointer-events: all; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0,0,0,.45);
+    }
+
+    /* ── Score popup ───────────────────────────────────────────────── */
+    .spop {
+      position: fixed; pointer-events: none; z-index: 30;
+      font-size: 22px; font-weight: 900; color: #FFD700;
+      text-shadow: 1px 1px 4px rgba(0,0,0,.8);
+      animation: spopAnim .85s ease-out forwards;
+    }
+    @keyframes spopAnim {
+      0%   { opacity:1; transform: translateY(0)   scale(1);   }
+      100% { opacity:0; transform: translateY(-65px) scale(1.5); }
+    }
+
+    /* ── Toast ─────────────────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 170px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,.8); color: #fff; padding: 10px 22px;
+      border-radius: 22px; font-size: 14px; white-space: nowrap;
+      opacity: 0; transition: opacity .3s; z-index: 40; pointer-events: none;
+    }
+    #toast.on { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- ── Title ───────────────────────────────────────────────────────────── -->
+<div id="title-screen" class="screen active">
+  <div class="t-logo">🏏</div>
+  <div class="t-title">동물 잡기!</div>
+  <div class="t-sub">몽둥이로 토끼와 거북이를 모두 잡아라!</div>
+  <button class="btn" id="btn-start">게임 시작 ▶</button>
+  <div class="t-hint">
+    이동: ← → ↑ ↓ &nbsp;|&nbsp; 공격: Space / Z
+  </div>
+</div>
+
+<!-- ── Canvas ──────────────────────────────────────────────────────────── -->
+<canvas id="c"></canvas>
+
+<!-- ── HUD ────────────────────────────────────────────────────────────── -->
+<div id="hud">
+  <div class="hud-left">
+    <span class="hud-stage" id="hud-stage">Stage 1</span>
+    <span class="hud-remain" id="hud-remain">🐰2 🐢2</span>
+  </div>
+  <div class="hud-timer" id="hud-timer">40</div>
+  <div>
+    <div class="hud-score" id="hud-score">0</div>
+    <div class="hud-lives" id="hud-lives">❤️❤️❤️</div>
+  </div>
+</div>
+
+<!-- ── Touch Controls ─────────────────────────────────────────────────── -->
+<div id="tc">
+  <div id="joy-zone">
+    <div id="joy-base"></div>
+    <div id="joy-knob"></div>
+  </div>
+  <div id="atk-btn">🏏</div>
+</div>
+
+<!-- ── Stage Clear ────────────────────────────────────────────────────── -->
+<div id="clear-screen" class="screen ov-bg">
+  <div class="ov-box">
+    <div class="ov-icon">🎉</div>
+    <div class="ov-title">스테이지 클리어!</div>
+    <div class="ov-sub"  id="clear-sub"></div>
+    <div class="ov-pts"  id="clear-pts"></div>
+    <button class="btn"  id="btn-next">다음 스테이지 →</button>
+  </div>
+</div>
+
+<!-- ── Game Over ──────────────────────────────────────────────────────── -->
+<div id="over-screen" class="screen ov-bg">
+  <div class="ov-box">
+    <div class="ov-icon">😵</div>
+    <div class="ov-title">게임 오버</div>
+    <div class="ov-sub"  id="over-sub"></div>
+    <div class="ov-pts"  id="over-pts"></div>
+    <button class="btn"  id="btn-retry">다시 시작</button>
+  </div>
+</div>
+
+<!-- ── Toast ──────────────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ── roundRect polyfill ────────────────────────────────────────────────────
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+    r = Math.min(r, w/2, h/2);
+    this.moveTo(x+r,y); this.arcTo(x+w,y,x+w,y+h,r);
+    this.arcTo(x+w,y+h,x,y+h,r); this.arcTo(x,y+h,x,y,r);
+    this.arcTo(x,y,x+w,y,r); this.closePath(); return this;
+  };
+}
+
+// ── Constants ─────────────────────────────────────────────────────────────
+const PLAYER_SPD  = 195;   // px/s
+const SWING_R     = 85;    // swing reach (px)
+const SWING_HALF  = 1.05;  // half-arc angle (rad) ≈ 60°
+const SWING_MS    = 380;
+const SWING_CD_MS = 480;
+
+const STAGES = [
+  { rabbits:2, turtles:2, time:42 },
+  { rabbits:3, turtles:2, time:48 },
+  { rabbits:3, turtles:3, time:52 },
+  { rabbits:4, turtles:3, time:58 },
+  { rabbits:5, turtles:4, time:65 },
+];
+
+// ── DOM ───────────────────────────────────────────────────────────────────
+const canvas    = document.getElementById('c');
+const ctx       = canvas.getContext('2d');
+const hud       = document.getElementById('hud');
+const hudStage  = document.getElementById('hud-stage');
+const hudRemain = document.getElementById('hud-remain');
+const hudTimer  = document.getElementById('hud-timer');
+const hudScore  = document.getElementById('hud-score');
+const hudLives  = document.getElementById('hud-lives');
+const tcEl      = document.getElementById('tc');
+const joyBase   = document.getElementById('joy-base');
+const joyKnob   = document.getElementById('joy-knob');
+const atkBtn    = document.getElementById('atk-btn');
+const toastEl   = document.getElementById('toast');
+
+// ── Size ──────────────────────────────────────────────────────────────────
+let W, H;
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  buildGrass();
+}
+window.addEventListener('resize', resize);
+
+// ── State ─────────────────────────────────────────────────────────────────
+let phase = 'title';   // title | playing | clear | over
+let stageIdx = 0;
+let score    = 0;
+let lives    = 3;
+let timeLeft = 0;
+let timerTick = null;
+let animId    = null;
+let lastMs    = 0;
+
+// Player
+const P = {
+  x:0, y:0,
+  dir: 0,       // facing angle (0 = right)
+  swingT: -1,   // ms elapsed in current swing (-1 = none)
+  swingCd: 0,   // cooldown ms remaining
+};
+
+let animals   = [];
+let particles = [];
+let swingHits = new Set();
+let grassPts  = [];
+
+// ── Input (keyboard) ──────────────────────────────────────────────────────
+const K = {};
+window.addEventListener('keydown', e => {
+  K[e.key] = true;
+  if (e.key === ' ' || e.key === 'z' || e.key === 'Z') {
+    e.preventDefault(); triggerSwing();
+  }
+});
+window.addEventListener('keyup', e => { K[e.key] = false; });
+
+// ── Joystick ──────────────────────────────────────────────────────────────
+const joy = { active:false, id:null, bx:0, by:0, dx:0, dy:0 };
+const JOY_MAX = 38;
+
+const joyZone = document.getElementById('joy-zone');
+joyZone.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (joy.active) return;
+  const t = e.changedTouches[0];
+  const r = joyZone.getBoundingClientRect();
+  joy.active = true; joy.id = t.identifier;
+  joy.bx = t.clientX - r.left;
+  joy.by = t.clientY - r.top;
+  joy.dx = joy.dy = 0;
+  setKnob(0, 0);
+}, { passive:false });
+
+joyZone.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.identifier !== joy.id) continue;
+    const r = joyZone.getBoundingClientRect();
+    let dx = t.clientX - r.left - joy.bx;
+    let dy = t.clientY - r.top  - joy.by;
+    const m = Math.sqrt(dx*dx + dy*dy);
+    if (m > JOY_MAX) { dx = dx/m*JOY_MAX; dy = dy/m*JOY_MAX; }
+    joy.dx = dx / JOY_MAX;
+    joy.dy = dy / JOY_MAX;
+    setKnob(dx, dy);
+  }
+}, { passive:false });
+
+['touchend','touchcancel'].forEach(ev =>
+  joyZone.addEventListener(ev, e => {
+    e.preventDefault();
+    joy.active = false; joy.dx = joy.dy = 0;
+    setKnob(0, 0);
+  }, { passive:false })
+);
+
+function setKnob(dx, dy) {
+  // base center is at (48,48) in joy-base coordinates (left:30+48=78, bottom:30+48=78 from zone)
+  const bRect = joyBase.getBoundingClientRect();
+  const zRect = joyZone.getBoundingClientRect();
+  const baseCx = bRect.left - zRect.left + 48;
+  const baseCy = bRect.top  - zRect.top  + 48;
+  joyKnob.style.left = (baseCx - 21 + dx) + 'px';
+  joyKnob.style.top  = (baseCy - 21 + dy) + 'px';
+}
+
+atkBtn.addEventListener('touchstart', e => { e.preventDefault(); triggerSwing(); }, { passive:false });
+atkBtn.addEventListener('click', triggerSwing);
+
+// ── Screens ───────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  if (id) document.getElementById(id).classList.add('active');
+}
+
+// ── Button wiring ─────────────────────────────────────────────────────────
+document.getElementById('btn-start').addEventListener('click', () => {
+  stageIdx = 0; score = 0; lives = 3; startStage();
+});
+document.getElementById('btn-next').addEventListener('click', () => {
+  stageIdx++;
+  if (stageIdx >= STAGES.length) { stageIdx = 0; score = 0; lives = 3; }
+  startStage();
+});
+document.getElementById('btn-retry').addEventListener('click', () => {
+  stageIdx = 0; score = 0; lives = 3; startStage();
+});
+
+// ── Start stage ───────────────────────────────────────────────────────────
+function startStage() {
+  showScreen(null);
+  phase = 'playing';
+  const def = STAGES[stageIdx];
+  timeLeft = def.time;
+
+  P.x = W/2; P.y = H/2; P.dir = 0; P.swingT = -1; P.swingCd = 0;
+  animals = [];
+  for (let i=0; i<def.rabbits; i++) animals.push(makeAnimal('rabbit'));
+  for (let i=0; i<def.turtles; i++) animals.push(makeAnimal('turtle'));
+  particles = []; swingHits = new Set();
+
+  hud.classList.add('on');
+  tcEl.classList.add('on');
+  hudStage.textContent = `Stage ${stageIdx+1} / ${STAGES.length}`;
+  hudScore.textContent = score;
+  hudTimer.textContent = timeLeft;
+  hudTimer.style.color = '#ff6b6b';
+  refreshLives(); refreshRemain();
+
+  clearInterval(timerTick);
+  timerTick = setInterval(() => {
+    if (phase !== 'playing') return;
+    timeLeft--;
+    hudTimer.textContent = timeLeft;
+    hudTimer.style.color = timeLeft <= 10 ? '#ff2222' : '#ff6b6b';
+    if (timeLeft <= 0) onTimeUp();
+  }, 1000);
+
+  if (animId) cancelAnimationFrame(animId);
+  lastMs = performance.now();
+  animId = requestAnimationFrame(loop);
+
+  // show joystick only on touch devices
+  tcEl.style.display = isTouchDevice() ? 'block' : 'none';
+}
+
+function isTouchDevice() { return 'ontouchstart' in window; }
+
+function makeAnimal(type) {
+  let x, y;
+  const pad = 70;
+  do {
+    x = pad + Math.random() * (W - pad*2);
+    y = pad + 60 + Math.random() * (H - pad*2 - 60);
+  } while (dist(x,y,P.x,P.y) < 180);
+
+  const rb = type === 'rabbit';
+  return {
+    type, x, y, vx:0, vy:0,
+    dir: Math.random() * Math.PI * 2,
+    tx: x, ty: y,         // wander target
+    wanderCd: 0,
+    speed:     rb ? 160 : 65,
+    fleeSpd:   rb ? 230 : 100,
+    detectR:   rb ? 165 : 105,
+    fleeR:     rb ?  95 :  65,
+    size:      rb ?  19 :  24,
+    state: 'wander',      // wander | alert | flee | caught
+    caughtT: 0,
+    bobT: Math.random() * Math.PI * 2,
+    // eye blink
+    blinkT: 0, blinkCd: 2 + Math.random() * 3,
+  };
+}
+
+// ── Swing ─────────────────────────────────────────────────────────────────
+function triggerSwing() {
+  if (phase !== 'playing') return;
+  if (P.swingT >= 0 || P.swingCd > 0) return;
+  P.swingT = 0; swingHits = new Set();
+}
+
+// ── Time up / Game Over / Stage Clear ─────────────────────────────────────
+function onTimeUp() {
+  lives--;
+  refreshLives();
+  if (lives <= 0) {
+    endGame('⏰ 시간 초과!');
+  } else {
+    toast(`⏰ 시간 초과! 목숨 -1  남은 목숨: ${'❤️'.repeat(lives)}`);
+    setTimeout(() => { if (phase === 'playing') startStage(); }, 1900);
+  }
+}
+
+function endGame(reason) {
+  phase = 'over';
+  cleanup();
+  document.getElementById('over-sub').textContent = reason;
+  document.getElementById('over-pts').textContent = `최종 점수: ${score.toLocaleString()}점`;
+  showScreen('over-screen');
+}
+
+function stageClear() {
+  phase = 'clear';
+  cleanup();
+  const bonus = timeLeft * 12;
+  score += bonus;
+  hudScore.textContent = score;
+  const isLast = stageIdx >= STAGES.length - 1;
+  document.getElementById('clear-sub').textContent =
+    `시간 보너스 +${bonus}  (남은 시간 ${timeLeft}초 × 12)`;
+  document.getElementById('clear-pts').textContent =
+    `총 점수: ${score.toLocaleString()}점`;
+  const nb = document.getElementById('btn-next');
+  nb.textContent = isLast ? '처음부터 다시 ↺' : '다음 스테이지 →';
+  showScreen('clear-screen');
+}
+
+function cleanup() {
+  clearInterval(timerTick);
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  hud.classList.remove('on');
+  tcEl.classList.remove('on');
+}
+
+// ── Game Loop ─────────────────────────────────────────────────────────────
+function loop(ms) {
+  const dt = Math.min((ms - lastMs) / 1000, 0.05);
+  lastMs = ms;
+  update(dt);
+  render();
+  if (phase === 'playing') animId = requestAnimationFrame(loop);
+}
+
+// ── Update ────────────────────────────────────────────────────────────────
+function update(dt) {
+  movePlayer(dt);
+  moveAnimals(dt);
+  tickSwing(dt);
+  tickParticles(dt);
+  if (animals.filter(a=>a.state!=='caught').length === 0 &&
+      animals.length > 0 && animals.every(a=>a.caughtT > 500)) {
+    stageClear();
+  }
+}
+
+function movePlayer(dt) {
+  let mx=0, my=0;
+  if (K['ArrowLeft']  || K['a'] || K['A']) mx -= 1;
+  if (K['ArrowRight'] || K['d'] || K['D']) mx += 1;
+  if (K['ArrowUp']    || K['w'] || K['W']) my -= 1;
+  if (K['ArrowDown']  || K['s'] || K['S']) my += 1;
+  if (joy.active) { mx += joy.dx; my += joy.dy; }
+  const mag = Math.sqrt(mx*mx + my*my);
+  if (mag > 0.08) {
+    const spd = PLAYER_SPD * Math.min(mag, 1);
+    const nx = mx/Math.max(mag,1), ny = my/Math.max(mag,1);
+    P.x += nx * spd * dt;
+    P.y += ny * spd * dt;
+    P.dir = Math.atan2(ny, nx);
+  }
+  const m = 36, top = 56;
+  P.x = clamp(P.x, m, W-m);
+  P.y = clamp(P.y, top+m, H-m);
+}
+
+function moveAnimals(dt) {
+  for (const a of animals) {
+    a.bobT += dt * 3.5;
+    a.blinkT += dt;
+    if (a.blinkT > a.blinkCd) { a.blinkT = 0; a.blinkCd = 2 + Math.random()*3; }
+    if (a.state === 'caught') { a.caughtT += dt*1000; continue; }
+
+    const d = dist(a.x,a.y,P.x,P.y);
+    if      (d < a.fleeR)   a.state = 'flee';
+    else if (d < a.detectR) a.state = 'alert';
+    else                    a.state = 'wander';
+
+    let tx, ty, spd;
+    if (a.state === 'flee') {
+      const ang = Math.atan2(a.y-P.y, a.x-P.x) + (Math.random()-0.5)*0.4;
+      tx = a.x + Math.cos(ang)*300; ty = a.y + Math.sin(ang)*300;
+      spd = a.fleeSpd;
+    } else if (a.state === 'alert') {
+      a.wanderCd -= dt;
+      if (a.wanderCd <= 0 || dist(a.x,a.y,a.tx,a.ty)<25) newWanderTarget(a);
+      tx = a.tx; ty = a.ty; spd = a.speed * 1.3;
+    } else {
+      a.wanderCd -= dt;
+      if (a.wanderCd <= 0 || dist(a.x,a.y,a.tx,a.ty)<25) newWanderTarget(a);
+      tx = a.tx; ty = a.ty; spd = a.speed * 0.55;
+    }
+
+    const ddx = tx-a.x, ddy = ty-a.y, dm = Math.sqrt(ddx*ddx+ddy*ddy);
+    if (dm > 8) {
+      const nx=ddx/dm, ny=ddy/dm;
+      a.vx += (nx*spd - a.vx) * Math.min(dt*9, 1);
+      a.vy += (ny*spd - a.vy) * Math.min(dt*9, 1);
+    } else { a.vx *= 0.85; a.vy *= 0.85; }
+
+    a.x += a.vx*dt; a.y += a.vy*dt;
+    if (Math.abs(a.vx)>8||Math.abs(a.vy)>8) a.dir = Math.atan2(a.vy,a.vx);
+
+    const am = a.size+2, at = 62;
+    if (a.x<am)     { a.x=am;     a.vx=Math.abs(a.vx); }
+    if (a.x>W-am)   { a.x=W-am;   a.vx=-Math.abs(a.vx); }
+    if (a.y<at+am)  { a.y=at+am;  a.vy=Math.abs(a.vy); }
+    if (a.y>H-am)   { a.y=H-am;   a.vy=-Math.abs(a.vy); }
+  }
+}
+
+function newWanderTarget(a) {
+  a.tx = 70 + Math.random()*(W-140);
+  a.ty = 90 + Math.random()*(H-180);
+  a.wanderCd = 1.5 + Math.random()*2.5;
+}
+
+function tickSwing(dt) {
+  if (P.swingT < 0) {
+    if (P.swingCd > 0) P.swingCd -= dt*1000;
+    return;
+  }
+  P.swingT += dt*1000;
+  // collision check during active phase (0-65%)
+  if (P.swingT / SWING_MS <= 0.65) {
+    for (const a of animals) {
+      if (a.state === 'caught' || swingHits.has(a)) continue;
+      if (dist(a.x,a.y,P.x,P.y) > SWING_R + a.size*0.6) continue;
+      let diff = Math.atan2(a.y-P.y,a.x-P.x) - P.dir;
+      while (diff >  Math.PI) diff -= Math.PI*2;
+      while (diff < -Math.PI) diff += Math.PI*2;
+      if (Math.abs(diff) <= SWING_HALF) { swingHits.add(a); catchAnimal(a); }
+    }
+  }
+  if (P.swingT >= SWING_MS) { P.swingT = -1; P.swingCd = SWING_CD_MS; }
+}
+
+function catchAnimal(a) {
+  a.state = 'caught'; a.caughtT = 0;
+  const pts = a.type === 'rabbit' ? 100 : 150;
+  score += pts; hudScore.textContent = score;
+  spawnParticles(a);
+  scorePopup(a.x, a.y-28, `+${pts}`);
+  refreshRemain();
+}
+
+function tickParticles(dt) {
+  for (const p of particles) {
+    p.x += p.vx*dt; p.y += p.vy*dt;
+    p.vy += 260*dt; p.life -= dt*2.2;
+  }
+  particles = particles.filter(p=>p.life>0);
+}
+
+function spawnParticles(a) {
+  const col = a.type === 'rabbit' ? ['#FFD700','#fff','#ffb3ba'] : ['#8BC34A','#FFD700','#fff'];
+  for (let i=0; i<10; i++) {
+    const ang = Math.random()*Math.PI*2, spd = 80+Math.random()*160;
+    particles.push({
+      x:a.x, y:a.y,
+      vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd-60,
+      life:1, color: col[i%col.length],
+      r: 4+Math.random()*5,
+    });
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+function render() {
+  ctx.clearRect(0,0,W,H);
+  drawBg();
+  for (const a of animals) drawAnimal(a);
+  drawPlayer();
+  drawParticlesFx();
+}
+
+function drawBg() {
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#5ea85e'); g.addColorStop(1,'#357a35');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  ctx.save(); ctx.strokeStyle='rgba(0,60,0,.3)'; ctx.lineWidth=1.5;
+  for (const p of grassPts) {
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a); ctx.scale(p.s,p.s);
+    ctx.beginPath();
+    ctx.moveTo(-3,0); ctx.lineTo(0,-13);
+    ctx.moveTo(0,0);  ctx.lineTo(3,-15);
+    ctx.moveTo(3,0);  ctx.lineTo(6,-11);
+    ctx.stroke(); ctx.restore();
+  }
+  ctx.restore();
+}
+
+function buildGrass() {
+  grassPts = [];
+  const n = Math.floor(W*H/7500);
+  for (let i=0;i<n;i++) grassPts.push({
+    x: Math.random()*W, y: Math.random()*H,
+    s: .6+Math.random()*.9,
+    a: -Math.PI/2+(Math.random()-.5)*.5,
+  });
+}
+
+function drawPlayer() {
+  const swA = swingAngle();
+  ctx.save();
+  ctx.translate(P.x, P.y);
+
+  // shadow
+  shadow(0, 20, 20, 7);
+
+  // club (drawn behind body)
+  const ca = P.dir + swA;
+  const cx1 = Math.cos(ca)*16, cy1 = Math.sin(ca)*16;
+  const cx2 = Math.cos(ca)*60, cy2 = Math.sin(ca)*60;
+  ctx.strokeStyle='#6D4C41'; ctx.lineWidth=5; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(cx1,cy1); ctx.lineTo(cx2,cy2); ctx.stroke();
+  ctx.fillStyle='#4E342E';
+  ctx.beginPath(); ctx.arc(cx2,cy2,9,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#3E2723'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx2,cy2,9,0,Math.PI*2); ctx.stroke();
+
+  // body
+  ctx.fillStyle='#FF7043';
+  ctx.beginPath(); ctx.arc(0,2,18,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#E64A19'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(0,2,18,0,Math.PI*2); ctx.stroke();
+
+  // head bubble (shifted in facing direction)
+  const hx = Math.cos(P.dir)*11, hy = Math.sin(P.dir)*11;
+  ctx.fillStyle='#FFCCBC';
+  ctx.beginPath(); ctx.arc(hx, hy, 10, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#FFAB91'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(hx, hy, 10, 0, Math.PI*2); ctx.stroke();
+
+  // eyes
+  const e1a = P.dir+0.45, e2a = P.dir-0.45;
+  ctx.fillStyle='#333';
+  ctx.beginPath(); ctx.arc(hx+Math.cos(e1a)*4.5, hy+Math.sin(e1a)*4.5, 2.2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(hx+Math.cos(e2a)*4.5, hy+Math.sin(e2a)*4.5, 2.2,0,Math.PI*2); ctx.fill();
+
+  // swing arc flash
+  if (P.swingT >= 0) {
+    const prog = P.swingT/SWING_MS;
+    ctx.globalAlpha = (1-prog)*0.45;
+    ctx.strokeStyle='#FFD700'; ctx.lineWidth=3.5;
+    ctx.beginPath(); ctx.arc(0,0,SWING_R, P.dir-SWING_HALF, P.dir+SWING_HALF); ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+}
+
+function swingAngle() {
+  if (P.swingT < 0) return 0;
+  const t = P.swingT / SWING_MS;
+  if (t < 0.6) return SWING_HALF - SWING_HALF*2*(t/0.6);
+  return -SWING_HALF + SWING_HALF*((t-0.6)/0.4);
+}
+
+function drawAnimal(a) {
+  if (a.state === 'caught') { drawCaughtSpin(a); return; }
+  ctx.save();
+  ctx.translate(a.x, a.y + Math.sin(a.bobT)*2.5);
+  shadow(1, a.size-1, a.size*0.65, a.size*0.22);
+  if (a.type === 'rabbit') drawRabbit(a);
+  else drawTurtle(a);
+  ctx.restore();
+}
+
+function drawRabbit(a) {
+  const fl = Math.cos(a.dir) < 0 ? -1 : 1;
+  ctx.scale(fl, 1);
+
+  // ears
+  ctx.fillStyle='#f0f0f0';
+  ctx.beginPath(); ctx.ellipse(-7,-25,5,13,-0.15,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 5,-27,5,13, 0.15,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ffb3c1';
+  ctx.beginPath(); ctx.ellipse(-7,-25,3, 9,-0.15,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 5,-27,3, 9, 0.15,0,Math.PI*2); ctx.fill();
+
+  // body
+  ctx.fillStyle = a.state==='flee' ? '#ddd' : '#f5f5f5';
+  ctx.beginPath(); ctx.ellipse(0,4,13,17,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#e0e0e0'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.ellipse(0,4,13,17,0,0,Math.PI*2); ctx.stroke();
+
+  // head
+  ctx.fillStyle='#f5f5f5';
+  ctx.beginPath(); ctx.arc(4,-12,11,0,Math.PI*2); ctx.fill();
+
+  // eye
+  const blink = a.blinkT < 0.08;
+  ctx.fillStyle='#333';
+  if (blink) {
+    ctx.lineWidth=2; ctx.strokeStyle='#333';
+    ctx.beginPath(); ctx.moveTo(7,-13); ctx.lineTo(11,-13); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(9,-13,3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.6)';
+    ctx.beginPath(); ctx.arc(10,-14,1,0,Math.PI*2); ctx.fill();
+  }
+
+  // nose
+  ctx.fillStyle='#ffb3c1';
+  ctx.beginPath(); ctx.arc(13,-11,2.5,0,Math.PI*2); ctx.fill();
+
+  // tail
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(-11,9,6,0,Math.PI*2); ctx.fill();
+
+  // flee indicator
+  if (a.state==='flee') {
+    ctx.fillStyle='#ff3333'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('!', 0,-42);
+  }
+}
+
+function drawTurtle(a) {
+  const bob = Math.sin(a.bobT*1.6)*4;
+
+  // legs
+  ctx.fillStyle='#558B2F';
+  ctx.beginPath(); ctx.ellipse(-15,-7+bob,6,5,-0.3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 15,-7-bob,6,5, 0.3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-15, 7-bob,6,5, 0.3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 15, 7+bob,6,5,-0.3,0,Math.PI*2); ctx.fill();
+
+  // shell
+  const sg = ctx.createRadialGradient(-4,-4,2,0,0,20);
+  sg.addColorStop(0,'#9CCC65'); sg.addColorStop(1,'#2E7D32');
+  ctx.fillStyle=sg;
+  ctx.beginPath(); ctx.ellipse(0,0,20,16,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#1B5E20'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(0,-16); ctx.lineTo(0,16); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-20,0); ctx.lineTo(20,0); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,9.5,0,Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(0,0,20,16,0,0,Math.PI*2); ctx.stroke();
+
+  // head
+  const hx=Math.cos(a.dir)*19, hy=Math.sin(a.dir)*15;
+  ctx.fillStyle='#558B2F';
+  ctx.beginPath(); ctx.arc(hx,hy,7,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#2E7D32'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(hx,hy,7,0,Math.PI*2); ctx.stroke();
+
+  // turtle eyes
+  const blink = a.blinkT < 0.07;
+  ctx.fillStyle='#1a1a1a';
+  const ea1 = a.dir+0.5, ea2 = a.dir-0.5;
+  if (blink) {
+    ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(hx+Math.cos(ea1)*3,hy+Math.sin(ea1)*3);
+    ctx.lineTo(hx+Math.cos(ea1)*5,hy+Math.sin(ea1)*5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(hx+Math.cos(ea2)*3,hy+Math.sin(ea2)*3);
+    ctx.lineTo(hx+Math.cos(ea2)*5,hy+Math.sin(ea2)*5); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(hx+Math.cos(ea1)*4, hy+Math.sin(ea1)*4, 2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(hx+Math.cos(ea2)*4, hy+Math.sin(ea2)*4, 2,0,Math.PI*2); ctx.fill();
+  }
+}
+
+function drawCaughtSpin(a) {
+  const t = Math.min(a.caughtT/600, 1);
+  ctx.save();
+  ctx.translate(a.x, a.y);
+  ctx.globalAlpha = 1-t;
+  ctx.rotate(t * Math.PI*3);
+  ctx.scale(1-t*0.9, 1-t*0.9);
+  ctx.font = a.type==='rabbit' ? '38px serif' : '40px serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(a.type==='rabbit' ? '🐰' : '🐢', 0, 0);
+  ctx.restore();
+}
+
+function drawParticlesFx() {
+  for (const p of particles) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * Math.max(p.life,0.1), 0, Math.PI*2);
+    ctx.fill(); ctx.restore();
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function shadow(ox,oy,rx,ry) {
+  ctx.save(); ctx.globalAlpha=0.2; ctx.fillStyle='#000';
+  ctx.beginPath(); ctx.ellipse(ox,oy,rx,ry,0,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function dist(x1,y1,x2,y2) { return Math.sqrt((x2-x1)**2+(y2-y1)**2); }
+function clamp(v,lo,hi)     { return Math.max(lo,Math.min(hi,v)); }
+
+function refreshLives() {
+  hudLives.textContent = '❤️'.repeat(lives) + '🖤'.repeat(Math.max(0,3-lives));
+}
+function refreshRemain() {
+  const r = animals.filter(a=>a.type==='rabbit'&&a.state!=='caught').length;
+  const t = animals.filter(a=>a.type==='turtle'&&a.state!=='caught').length;
+  hudRemain.textContent = `🐰${r}  🐢${t}`;
+}
+
+function scorePopup(x, y, txt) {
+  const el = document.createElement('div');
+  el.className='spop'; el.textContent=txt;
+  el.style.cssText=`left:${x}px;top:${y}px;transform:translateX(-50%)`;
+  document.body.appendChild(el);
+  el.addEventListener('animationend', ()=>el.remove());
+}
+
+function toast(msg) {
+  toastEl.textContent = msg; toastEl.classList.add('on');
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(()=>toastEl.classList.remove('on'), 2600);
+}
+
+// ── Touch device detection (show TC after first touch) ───────────────────
+window.addEventListener('touchstart', () => {
+  if (phase==='playing') tcEl.style.display='block';
+}, { once:true });
+
+// ── Init ──────────────────────────────────────────────────────────────────
+resize();
+</script>
+</body>
+</html>
