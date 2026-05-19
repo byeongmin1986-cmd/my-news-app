@@ -64,10 +64,19 @@ def append_csv(records: list[dict]):
 
 def main():
     site_filter = sys.argv[1] if len(sys.argv) > 1 else None
-    key = os.environ.get("SCRAPERAPI_KEY", "")
-    logger.info(f"Mode: {'ScraperAPI proxy' if key else 'Direct (residential IP only)'}")
+    api_key = os.environ.get("SCRAPERAPI_KEY", "")
+
+    if not api_key:
+        logger.warning("=" * 60)
+        logger.warning("SCRAPERAPI_KEY is not set.")
+        logger.warning("Cloud runner IPs are blocked by Jumia/CompuGhana WAF.")
+        logger.warning("Set SCRAPERAPI_KEY in GitHub Secrets to enable scraping.")
+        logger.warning("=" * 60)
+
+    logger.info(f"Mode: {'ScraperAPI proxy' if api_key else 'Direct request (WAF will likely block)'}")
 
     targets = {site_filter: CRAWLERS[site_filter]} if site_filter else CRAWLERS
+    total_products = 0
 
     for site_key, cfg in targets.items():
         logger.info("=" * 60)
@@ -80,18 +89,24 @@ def main():
             if products:
                 new_c, upd_c = DB.bulk_upsert(products)
                 append_csv(products)
+                total_products += len(products)
                 logger.info(f"DB: {new_c} new / {upd_c} updated")
                 DB.log_crawl(site=site_key, country=crawler.country,
                              status="success", products_found=len(products), started_at=started)
             else:
-                logger.warning(f"No products from {site_key}")
+                logger.warning(f"No products from {site_key} — WAF block or empty category?")
                 DB.log_crawl(site=site_key, country="", status="empty", started_at=started)
         except Exception as e:
             logger.error(f"[{site_key}] FAILED: {e}", exc_info=True)
             DB.log_crawl(site=site_key, country="", status="error",
                          error_message=str(e), started_at=started)
 
-    logger.info(f"DONE  DB_total={DB.total_products()}  CSV={CSV_PATH}")
+    logger.info("=" * 60)
+    logger.info(f"DONE  total_products={total_products}  DB_total={DB.total_products()}  CSV={CSV_PATH}")
+
+    if total_products == 0:
+        logger.error("0 products collected across all sites — exiting with code 1")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
