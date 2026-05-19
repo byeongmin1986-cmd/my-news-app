@@ -1,8 +1,9 @@
-# 웹 크롤링
+# 크롤링
+playwright==1.44.0
 requests==2.31.0
 beautifulsoup4==4.12.3
 lxml==5.2.1
-playwright==1.43.0
+cloudscraper==1.2.71
 
 # 데이터 처리
 pandas==2.2.2
