@@ -2,8 +2,8 @@
 crawler/base.py
 ScraperAPI 프록시를 통해 WAF를 우회하는 기반 클래스.
 
-- SCRAPERAPI_KEY 환경변수가 있으면 프록시 경유
-- 없으면 직접 요청 (로컬 PC 실행 시)
+- SCRAPERAPI_KEY 환경변수가 있으면 ScraperAPI 경유 (GitHub Actions)
+- 없으면 직접 요청 (로컬 PC residential IP)
 """
 from __future__ import annotations
 
@@ -44,7 +44,6 @@ class BaseCrawler:
         self._session   = requests.Session()
         self._session.headers.update(HEADERS)
 
-    # ── HTTP 요청 ───────────────────────────────────────────────
     def get(self, url: str, render_js: bool = False) -> requests.Response | None:
         """ScraperAPI 경유 또는 직접 요청. 실패 시 None."""
         for attempt in range(1, 4):
@@ -62,7 +61,7 @@ class BaseCrawler:
                 return r
             except requests.RequestException as e:
                 wait = 2 ** attempt
-                logger.warning(f"[{self.retailer}] attempt {attempt} failed: {e} → retry {wait}s")
+                logger.warning(f"[{self.retailer}] attempt {attempt} failed: {e} -> retry {wait}s")
                 time.sleep(wait)
         logger.error(f"[{self.retailer}] all retries failed: {url}")
         return None
@@ -73,7 +72,6 @@ class BaseCrawler:
             return None
         return BeautifulSoup(r.text, "html.parser")
 
-    # ── 상품 dict 빌드 ──────────────────────────────────────────
     def make_product(self, **kw) -> dict:
         from utils.extractor import (
             extract_model_from_title, extract_refresh_rate,
@@ -83,7 +81,6 @@ class BaseCrawler:
             clean_price, extract_brand_from_title,
             normalize_brand, normalize_condition,
         )
-
         title     = kw.get("product_title", "")
         raw_brand = kw.get("brand")
         brand     = normalize_brand(raw_brand) if raw_brand else extract_brand_from_title(title)
@@ -91,7 +88,6 @@ class BaseCrawler:
         price     = kw.get("price")
         if isinstance(price, str):
             price = clean_price(price)
-
         return {
             "country":          self.country,
             "retailer":         self.retailer,

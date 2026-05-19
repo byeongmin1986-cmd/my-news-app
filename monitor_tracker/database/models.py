@@ -1,38 +1,38 @@
 CREATE_MONITORS_TABLE = """
 CREATE TABLE IF NOT EXISTS monitors (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    country         TEXT    NOT NULL,
-    retailer        TEXT    NOT NULL,
-    product_title   TEXT    NOT NULL,
-    brand           TEXT,
-    model           TEXT,
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    country          TEXT    NOT NULL,
+    retailer         TEXT    NOT NULL,
+    product_title    TEXT    NOT NULL,
+    brand            TEXT,
+    model            TEXT,
     screen_size_inch REAL,
-    resolution      TEXT,
-    refresh_rate    INTEGER,
-    panel_type      TEXT,
-    condition       TEXT    DEFAULT 'unknown',
-    price           REAL,
-    currency        TEXT,
-    availability    TEXT,
-    product_url     TEXT    UNIQUE NOT NULL,
-    image_url       TEXT,
-    crawl_date      TEXT    NOT NULL,
-    created_at      TEXT    DEFAULT (datetime('now')),
-    updated_at      TEXT    DEFAULT (datetime('now'))
+    resolution       TEXT,
+    refresh_rate     INTEGER,
+    panel_type       TEXT,
+    condition        TEXT    DEFAULT 'unknown',
+    price            REAL,
+    currency         TEXT,
+    availability     TEXT,
+    product_url      TEXT    UNIQUE NOT NULL,
+    image_url        TEXT,
+    crawl_date       TEXT    NOT NULL,
+    created_at       TEXT    DEFAULT (datetime('now')),
+    updated_at       TEXT    DEFAULT (datetime('now'))
 );
 """
 
 CREATE_CRAWL_LOGS_TABLE = """
 CREATE TABLE IF NOT EXISTS crawl_logs (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    site            TEXT    NOT NULL,
-    country         TEXT    NOT NULL,
-    status          TEXT    NOT NULL,
-    products_found  INTEGER DEFAULT 0,
-    error_message   TEXT,
-    started_at      TEXT,
-    completed_at    TEXT,
-    created_at      TEXT    DEFAULT (datetime('now'))
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    site           TEXT    NOT NULL,
+    country        TEXT    NOT NULL,
+    status         TEXT    NOT NULL,
+    products_found INTEGER DEFAULT 0,
+    error_message  TEXT,
+    started_at     TEXT,
+    completed_at   TEXT,
+    created_at     TEXT    DEFAULT (datetime('now'))
 );
 """
 
@@ -57,9 +57,9 @@ INSERT INTO monitors (
     :product_url, :image_url, :crawl_date
 )
 ON CONFLICT(product_url) DO UPDATE SET
-    price           = excluded.price,
-    availability    = excluded.availability,
-    image_url       = excluded.image_url,
-    crawl_date      = excluded.crawl_date,
-    updated_at      = datetime('now');
+    price        = excluded.price,
+    availability = excluded.availability,
+    image_url    = excluded.image_url,
+    crawl_date   = excluded.crawl_date,
+    updated_at   = datetime('now');
 """

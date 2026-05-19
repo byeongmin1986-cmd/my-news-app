@@ -1,14 +1,10 @@
 """
-Jumia Nigeria  —  jumia.com.ng
+Jumia Nigeria -- jumia.com.ng
 Jumia Kenya와 동일 구조, URL/통화만 다름.
 """
 from __future__ import annotations
-
-import json
-import logging
-
+import json, logging
 from crawler.base import BaseCrawler
-
 logger = logging.getLogger(__name__)
 
 SEARCH_URLS = [
@@ -26,7 +22,6 @@ SEL = {
     "image":     "img.img-responsive",
     "next_page": "a[aria-label='Next Page']",
 }
-
 
 class JumiaNigeriaCrawler(BaseCrawler):
     country  = "Nigeria"
@@ -99,11 +94,11 @@ class JumiaNigeriaCrawler(BaseCrawler):
                     continue
                 href = a.get("href", "")
                 url  = href if href.startswith("http") else self.base_url + href
-                t    = art.select_one(SEL["title"])
+                t = art.select_one(SEL["title"])
                 title = t.get_text(strip=True) if t else ""
                 if not title or not self.is_monitor(title):
                     continue
-                p = art.select_one(SEL["price"])
+                p   = art.select_one(SEL["price"])
                 img = art.select_one(SEL["image"])
                 products.append(self.make_product(
                     product_title=title,

@@ -1,0 +1,100 @@
+name: Monitor Price Crawler
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # 매주 월요일 06:00 UTC
+  workflow_dispatch:      # Streamlit 버튼 / 수동 실행
+    inputs:
+      site:
+        description: '특정 사이트만 실행 (kenya_jumia / nigeria_jumia / ghana_compughana, 비우면 전체)'
+        required: false
+        default: ''
+      max_pages:
+        description: '사이트당 최대 페이지 수'
+        required: false
+        default: '10'
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    defaults:
+      run:
+        working-directory: monitor_tracker
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: monitor_tracker/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create output directories
+        run: mkdir -p data logs
+
+      - name: Run crawler (Jumia Kenya)
+        if: ${{ github.event.inputs.site == '' || github.event.inputs.site == 'kenya_jumia' }}
+        run: python run_crawler.py kenya_jumia
+        env:
+          PYTHONPATH: .
+          SCRAPERAPI_KEY: ${{ secrets.SCRAPERAPI_KEY }}
+          MAX_PAGES: ${{ github.event.inputs.max_pages || '10' }}
+        continue-on-error: true
+
+      - name: Run crawler (Jumia Nigeria)
+        if: ${{ github.event.inputs.site == '' || github.event.inputs.site == 'nigeria_jumia' }}
+        run: python run_crawler.py nigeria_jumia
+        env:
+          PYTHONPATH: .
+          SCRAPERAPI_KEY: ${{ secrets.SCRAPERAPI_KEY }}
+          MAX_PAGES: ${{ github.event.inputs.max_pages || '10' }}
+        continue-on-error: true
+
+      - name: Run crawler (CompuGhana)
+        if: ${{ github.event.inputs.site == '' || github.event.inputs.site == 'ghana_compughana' }}
+        run: python run_crawler.py ghana_compughana
+        env:
+          PYTHONPATH: .
+          SCRAPERAPI_KEY: ${{ secrets.SCRAPERAPI_KEY }}
+          MAX_PAGES: ${{ github.event.inputs.max_pages || '10' }}
+        continue-on-error: true
+
+      - name: Upload logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crawl-logs-${{ github.run_id }}
+          path: monitor_tracker/logs/
+          retention-days: 14
+
+      - name: Upload CSV as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitors-csv-${{ github.run_id }}
+          path: monitor_tracker/data/monitors.csv
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Commit results to repository
+        run: |
+          git config user.name  "monitor-bot"
+          git config user.email "monitor-bot@users.noreply.github.com"
+          git add data/monitors.csv data/monitors.db 2>/dev/null || true
+          git diff --cached --quiet || \
+            git commit -m "data: monitor prices $(date +'%Y-%m-%d %H:%M UTC')"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,21 +1,13 @@
 """
-Jumia Kenya  —  jumia.co.ke
+Jumia Kenya -- jumia.co.ke
 ScraperAPI 경유로 WAF 우회.
-
-전략:
-  1순위: 페이지 내 JSON-LD (application/ld+json) 추출
-  2순위: article.prd-w HTML 파싱
+전략: 1순위 JSON-LD, 2순위 HTML article.prd-w
 """
 from __future__ import annotations
-
-import json
-import logging
-
+import json, logging
 from crawler.base import BaseCrawler
-
 logger = logging.getLogger(__name__)
 
-# ── 구조 변경 시 여기만 수정 ─────────────────────────────────
 SEARCH_URLS = [
     "https://www.jumia.co.ke/monitors/",
     "https://www.jumia.co.ke/computer-monitors/",
@@ -31,8 +23,6 @@ SEL = {
     "image":     "img.img-responsive",
     "next_page": "a[aria-label='Next Page']",
 }
-# ─────────────────────────────────────────────────────────────
-
 
 class JumiaKenyaCrawler(BaseCrawler):
     country  = "Kenya"
@@ -53,17 +43,14 @@ class JumiaKenyaCrawler(BaseCrawler):
             soup = self.soup(url)
             if soup is None:
                 break
-
             found = self._try_json_ld(soup) or self._parse_html(soup)
-            logger.info(f"[Jumia KE] pg {page_num}: {len(found)} products  ({url[:60]})")
+            logger.info(f"[Jumia KE] pg {page_num}: {len(found)} products")
             for p in found:
                 if p.get("product_url"):
                     seen[p["product_url"]] = p
-
             url = self._next_url(soup, url, page_num)
             page_num += 1
 
-    # ── JSON-LD 우선 추출 ────────────────────────────────────
     def _try_json_ld(self, soup) -> list[dict]:
         products = []
         for sc in soup.find_all("script", type="application/ld+json"):
@@ -99,7 +86,6 @@ class JumiaKenyaCrawler(BaseCrawler):
                 continue
         return products
 
-    # ── HTML 파싱 폴백 ───────────────────────────────────────
     def _parse_html(self, soup) -> list[dict]:
         products = []
         for art in soup.select(SEL["product"]):
@@ -109,23 +95,17 @@ class JumiaKenyaCrawler(BaseCrawler):
                     continue
                 href = a.get("href", "")
                 url  = href if href.startswith("http") else self.base_url + href
-
                 t = art.select_one(SEL["title"])
                 title = t.get_text(strip=True) if t else ""
                 if not title or not self.is_monitor(title):
                     continue
-
-                p = art.select_one(SEL["price"])
-                price_text = p.get_text(strip=True) if p else None
-
+                p   = art.select_one(SEL["price"])
                 img = art.select_one(SEL["image"])
-                image_url = img.get("data-src") or img.get("src") if img else None
-
                 products.append(self.make_product(
                     product_title=title,
-                    price=price_text,
+                    price=p.get_text(strip=True) if p else None,
                     product_url=url,
-                    image_url=image_url,
+                    image_url=img.get("data-src") or img.get("src") if img else None,
                 ))
             except Exception as e:
                 logger.debug(f"[Jumia KE] parse err: {e}")
