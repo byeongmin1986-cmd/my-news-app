@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.env
+data/monitors.db
+logs/*.log
+exports/*.csv
+exports/*.xlsx
