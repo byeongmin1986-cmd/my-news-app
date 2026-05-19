@@ -5,7 +5,7 @@ __pycache__/
 .Python
 venv/
 .env
-data/monitors.db
+# data/monitors.db  ← Streamlit Cloud 배포를 위해 포함
 logs/*.log
 exports/*.csv
 exports/*.xlsx
