@@ -1,17 +1,13 @@
 """
-Jumia Nigeria crawler  —  jumia.com.ng
-
-Jumia Kenya와 동일 구조. timezone/locale만 다름.
+Jumia Nigeria  —  jumia.com.ng
+Jumia Kenya와 동일 구조, URL/통화만 다름.
 """
 from __future__ import annotations
 
 import json
 import logging
-import random
 
-from playwright.sync_api import sync_playwright
-
-from crawler.base import BaseCrawler, _human_delay
+from crawler.base import BaseCrawler
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +18,7 @@ SEARCH_URLS = [
     "https://www.jumia.com.ng/catalog/?q=computer+monitor",
     "https://www.jumia.com.ng/catalog/?q=LED+monitor",
 ]
-
-SELECTORS = {
+SEL = {
     "product":   "article.prd-w",
     "title":     "h3.name",
     "price":     "div.prc",
@@ -34,56 +29,44 @@ SELECTORS = {
 
 
 class JumiaNigeriaCrawler(BaseCrawler):
-    country     = "Nigeria"
-    retailer    = "Jumia Nigeria"
-    base_url    = "https://www.jumia.com.ng"
-    currency    = "NGN"
-    timezone_id = "Africa/Lagos"
+    country  = "Nigeria"
+    retailer = "Jumia Nigeria"
+    base_url = "https://www.jumia.com.ng"
+    currency = "NGN"
 
     def scrape(self) -> list[dict]:
-        results: dict[str, dict] = {}
+        seen: dict[str, dict] = {}
+        for start_url in SEARCH_URLS:
+            self._crawl_listing(start_url, seen)
+        logger.info(f"[Jumia NG] total unique: {len(seen)}")
+        return list(seen.values())
 
-        with sync_playwright() as pw:
-            browser, ctx = self._new_context(pw)
-            page = ctx.new_page()
+    def _crawl_listing(self, start_url: str, seen: dict):
+        url, page_num = start_url, 1
+        while url and page_num <= self.max_pages:
+            soup = self.soup(url)
+            if soup is None:
+                break
+            found = self._try_json_ld(soup) or self._parse_html(soup)
+            logger.info(f"[Jumia NG] pg {page_num}: {len(found)} products")
+            for p in found:
+                if p.get("product_url"):
+                    seen[p["product_url"]] = p
+            url = self._next_url(soup, url, page_num)
+            page_num += 1
 
-            for start_url in SEARCH_URLS:
-                url = start_url
-                page_num = 1
-
-                while url and page_num <= self.max_pages:
-                    if not self.fetch_page(page, url):
-                        break
-
-                    found = self._extract_json_ld(page) or self._extract_html(page)
-                    logger.info(f"[Jumia NG] page {page_num} → {len(found)} products")
-                    for p in found:
-                        if p.get("product_url"):
-                            results[p["product_url"]] = p
-
-                    url = self._next_page_url(page, url, page_num)
-                    page_num += 1
-                    _human_delay(2.0, 4.0)
-
-            browser.close()
-
-        out = list(results.values())
-        logger.info(f"[Jumia NG] Total: {len(out)}")
-        return out
-
-    def _extract_json_ld(self, page) -> list[dict]:
+    def _try_json_ld(self, soup) -> list[dict]:
         products = []
-        for sc in page.query_selector_all("script[type='application/ld+json']"):
+        for sc in soup.find_all("script", type="application/ld+json"):
             try:
-                data = json.loads(sc.inner_text())
+                data = json.loads(sc.string or "")
                 items = []
                 if isinstance(data, dict):
                     if data.get("@type") == "ItemList":
-                        items = data.get("itemListElement", [])
+                        items = [e.get("item", e) for e in data.get("itemListElement", [])]
                     elif data.get("@type") == "Product":
                         items = [data]
-                for item in items:
-                    prod = item.get("item", item)
+                for prod in items:
                     if prod.get("@type") != "Product":
                         continue
                     name = prod.get("name", "")
@@ -95,57 +78,48 @@ class JumiaNigeriaCrawler(BaseCrawler):
                     url = prod.get("url", "")
                     if url and not url.startswith("http"):
                         url = self.base_url + url
-                    image = prod.get("image")
-                    if isinstance(image, list):
-                        image = image[0] if image else None
+                    img = prod.get("image")
                     products.append(self.make_product(
                         product_title=name,
                         price=offer.get("price"),
                         product_url=url,
-                        image_url=image,
+                        image_url=(img[0] if isinstance(img, list) else img),
                         availability=offer.get("availability", "unknown"),
                     ))
             except Exception:
                 continue
         return products
 
-    def _extract_html(self, page) -> list[dict]:
+    def _parse_html(self, soup) -> list[dict]:
         products = []
-        for art in page.query_selector_all(SELECTORS["product"]):
+        for art in soup.select(SEL["product"]):
             try:
-                a = art.query_selector(SELECTORS["link"])
+                a = art.select_one(SEL["link"])
                 if not a:
                     continue
-                href = a.get_attribute("href") or ""
-                url = href if href.startswith("http") else self.base_url + href
-
-                t = art.query_selector(SELECTORS["title"])
-                title = t.inner_text().strip() if t else ""
+                href = a.get("href", "")
+                url  = href if href.startswith("http") else self.base_url + href
+                t    = art.select_one(SEL["title"])
+                title = t.get_text(strip=True) if t else ""
                 if not title or not self.is_monitor(title):
                     continue
-
-                p = art.query_selector(SELECTORS["price"])
-                price_text = p.inner_text().strip() if p else None
-
-                img = art.query_selector(SELECTORS["image"])
-                image_url = None
-                if img:
-                    image_url = img.get_attribute("data-src") or img.get_attribute("src")
-
+                p = art.select_one(SEL["price"])
+                img = art.select_one(SEL["image"])
                 products.append(self.make_product(
-                    product_title=title, price=price_text,
-                    product_url=url, image_url=image_url,
+                    product_title=title,
+                    price=p.get_text(strip=True) if p else None,
+                    product_url=url,
+                    image_url=img.get("data-src") or img.get("src") if img else None,
                 ))
             except Exception as e:
-                logger.debug(f"[Jumia NG] parse error: {e}")
+                logger.debug(f"[Jumia NG] parse err: {e}")
         return products
 
-    def _next_page_url(self, page, current_url: str, page_num: int) -> str | None:
-        btn = page.query_selector(SELECTORS["next_page"])
-        if btn:
-            href = btn.get_attribute("href")
-            if href:
-                return href if href.startswith("http") else self.base_url + href
-        if f"page={page_num}" in current_url:
-            return current_url.replace(f"page={page_num}", f"page={page_num + 1}")
+    def _next_url(self, soup, current: str, page_num: int) -> str | None:
+        btn = soup.select_one(SEL["next_page"])
+        if btn and btn.get("href"):
+            h = btn["href"]
+            return h if h.startswith("http") else self.base_url + h
+        if f"page={page_num}" in current:
+            return current.replace(f"page={page_num}", f"page={page_num+1}")
         return None
