@@ -28,14 +28,20 @@ RAW_CSV = (
 )
 
 @st.cache_data(ttl=300)
-def load_data() -> pd.DataFrame:
+def load_data() -> tuple[pd.DataFrame, str]:
+    """Returns (dataframe, error_message). error_message is empty string on success."""
     try:
-        df = pd.read_csv(RAW_CSV)
-        df["price"]           = pd.to_numeric(df["price"],           errors="coerce")
+        r = requests.get(RAW_CSV, timeout=10)
+        if r.status_code == 404:
+            return pd.DataFrame(), "csv_not_found"
+        r.raise_for_status()
+        from io import StringIO
+        df = pd.read_csv(StringIO(r.text))
+        df["price"]            = pd.to_numeric(df["price"],            errors="coerce")
         df["screen_size_inch"] = pd.to_numeric(df["screen_size_inch"], errors="coerce")
-        return df
-    except Exception:
-        return pd.DataFrame()
+        return df, ""
+    except Exception as e:
+        return pd.DataFrame(), str(e)
 
 def trigger_crawl(site: str = "", max_pages: str = "10") -> tuple[bool, str]:
     token = st.secrets.get("GITHUB_TOKEN", "")
@@ -67,8 +73,8 @@ def get_workflow_runs() -> list[dict]:
         return []
 
 # ═══════════════════════════════════════
-df   = load_data()
-runs = get_workflow_runs()
+df, load_err = load_data()
+runs         = get_workflow_runs()
 
 st.title("🖥️ Africa Monitor Price Tracker")
 st.caption("Kenya / Ghana / Nigeria — 실제 온라인 리테일러 가격 수집")
@@ -80,8 +86,18 @@ if not df.empty:
     c2.metric("국가",       f"{df['country'].nunique()}개국")
     c3.metric("브랜드",     f"{df['brand'].nunique()}개")
     c4.metric("마지막 수집", df.get("crawl_date", pd.Series()).max() or "-")
+elif load_err == "csv_not_found":
+    st.warning(
+        "**아직 수집된 데이터가 없습니다.**\n\n"
+        "원인: GitHub Actions가 아직 실행되지 않았거나, "
+        "`SCRAPERAPI_KEY`가 GitHub Secrets에 설정되지 않아 0개 수집 후 종료됨.\n\n"
+        "**해결 방법:**\n"
+        "1. GitHub repo → Settings → Secrets → Actions → `SCRAPERAPI_KEY` 추가\n"
+        "2. 아래 **▶ 지금 전체 크롤링** 버튼 클릭\n"
+        "3. 5~10분 후 이 페이지 새로고침"
+    )
 else:
-    st.info("아직 수집된 데이터가 없습니다. 아래 버튼으로 크롤링을 실행하세요.")
+    st.info("아래 버튼으로 크롤링을 실행하세요.")
 
 st.divider()
 
@@ -143,7 +159,7 @@ if not df.empty:
     if sel_brand     != "전체": fdf = fdf[fdf["brand"]     == sel_brand]
     if sel_condition != "전체": fdf = fdf[fdf["condition"] == sel_condition]
 else:
-    fdf = df
+    fdf = df.copy()
 
 # ── 탭 ─────────────────────────────────
 tab1, tab2, tab3, tab4 = st.tabs(["📊 국가별", "🏷️ 브랜드/사이즈", "📋 상품 목록", "📥 내보내기"])
