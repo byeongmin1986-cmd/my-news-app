@@ -44,7 +44,9 @@ class BaseCrawler:
         self._session   = requests.Session()
         self._session.headers.update(HEADERS)
 
-    def get(self, url: str, render_js: bool = False) -> requests.Response | None:
+    def get(self, url: str, render_js: bool = False,
+            country_code: str = "", premium: bool = False,
+            keep_headers: bool = False) -> requests.Response | None:
         """ScraperAPI 경유 또는 직접 요청. 실패 시 None."""
         for attempt in range(1, 4):
             try:
@@ -53,11 +55,17 @@ class BaseCrawler:
                     params: dict = {"api_key": SCRAPERAPI_KEY, "url": url}
                     if render_js:
                         params["render"] = "true"
-                    r = self._session.get(SCRAPERAPI_URL, params=params, timeout=60)
+                    if country_code:
+                        params["country_code"] = country_code.lower()
+                    if premium:
+                        params["premium"] = "true"
+                    if keep_headers:
+                        params["keep_headers"] = "true"
+                    r = self._session.get(SCRAPERAPI_URL, params=params, timeout=90)
                 else:
                     r = self._session.get(url, timeout=30)
+                logger.info(f"[{self.retailer}] HTTP {r.status_code} {url[:70]}")
                 r.raise_for_status()
-                logger.info(f"[{self.retailer}] {r.status_code} {url[:70]}")
                 return r
             except requests.RequestException as e:
                 wait = 2 ** attempt
@@ -66,8 +74,11 @@ class BaseCrawler:
         logger.error(f"[{self.retailer}] all retries failed: {url}")
         return None
 
-    def soup(self, url: str, render_js: bool = False) -> BeautifulSoup | None:
-        r = self.get(url, render_js=render_js)
+    def soup(self, url: str, render_js: bool = False,
+             country_code: str = "", premium: bool = False,
+             keep_headers: bool = False) -> BeautifulSoup | None:
+        r = self.get(url, render_js=render_js, country_code=country_code,
+                     premium=premium, keep_headers=keep_headers)
         if r is None:
             return None
         return BeautifulSoup(r.text, "html.parser")

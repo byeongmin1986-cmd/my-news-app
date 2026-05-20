@@ -39,7 +39,7 @@ class JumiaNigeriaCrawler(BaseCrawler):
     def _crawl_listing(self, start_url: str, seen: dict):
         url, page_num = start_url, 1
         while url and page_num <= self.max_pages:
-            soup = self.soup(url)
+            soup = self.soup(url, country_code="ng")
             if soup is None:
                 break
             found = self._try_json_ld(soup) or self._parse_html(soup)
