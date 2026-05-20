@@ -53,6 +53,23 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Test ScraperAPI connectivity
+        run: |
+          echo "=== ScraperAPI 연결 테스트 ==="
+          HTTP_STATUS=$(curl -s -o /tmp/scraper_resp.txt -w "%{http_code}" \
+            "http://api.scraperapi.com/?api_key=${SCRAPERAPI_KEY}&url=https://httpbin.org/ip" \
+            --max-time 30)
+          echo "HTTP Status: $HTTP_STATUS"
+          cat /tmp/scraper_resp.txt
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::error::ScraperAPI 연결 실패 (status=$HTTP_STATUS). API 키가 올바른지 확인하세요."
+            echo "::error::scraperapi.com 대시보드에서 API Key와 잔여 크레딧을 확인하세요."
+            exit 1
+          fi
+          echo "✅ ScraperAPI 정상 작동"
+        env:
+          SCRAPERAPI_KEY: ${{ secrets.SCRAPERAPI_KEY }}
+
       - name: Create output directories
         run: mkdir -p data logs
 
