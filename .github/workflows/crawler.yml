@@ -3,7 +3,7 @@ name: Monitor Price Crawler
 on:
   schedule:
     - cron: "0 6 * * 1"   # 매주 월요일 06:00 UTC
-  workflow_dispatch:      # Streamlit 버튼 / 수동 실행
+  workflow_dispatch:
     inputs:
       site:
         description: '특정 사이트만 실행 (kenya_jumia / nigeria_jumia / ghana_compughana, 비우면 전체)'
@@ -34,12 +34,11 @@ jobs:
       - name: Check SCRAPERAPI_KEY is set
         run: |
           if [ -z "$SCRAPERAPI_KEY" ]; then
-            echo "::error::SCRAPERAPI_KEY is not set in GitHub Secrets."
-            echo "::error::Go to: Settings → Secrets and variables → Actions → New repository secret"
-            echo "::error::Name: SCRAPERAPI_KEY  Value: your ScraperAPI key"
+            echo "::error::SCRAPERAPI_KEY가 GitHub Secrets에 없습니다."
+            echo "::error::Settings → Secrets and variables → Actions → New repository secret"
             exit 1
           fi
-          echo "SCRAPERAPI_KEY is set (length=${#SCRAPERAPI_KEY})"
+          echo "SCRAPERAPI_KEY 확인됨 (length=${#SCRAPERAPI_KEY})"
         env:
           SCRAPERAPI_KEY: ${{ secrets.SCRAPERAPI_KEY }}
 
@@ -62,7 +61,7 @@ jobs:
           echo "HTTP Status: $HTTP_STATUS"
           cat /tmp/scraper_resp.txt
           if [ "$HTTP_STATUS" != "200" ]; then
-            echo "::error::ScraperAPI 연결 실패 (status=$HTTP_STATUS). API 키가 올바른지 확인하세요."
+            echo "::error::ScraperAPI 연결 실패 (status=$HTTP_STATUS)"
             echo "::error::scraperapi.com 대시보드에서 API Key와 잔여 크레딧을 확인하세요."
             exit 1
           fi
@@ -100,20 +99,28 @@ jobs:
           MAX_PAGES: ${{ github.event.inputs.max_pages || '10' }}
         continue-on-error: true
 
-      - name: Verify collected data
+      # crawl_status.json을 항상 커밋 (실패해도) → Streamlit에서 상태 확인용
+      - name: Commit results to repository
+        if: always()
         run: |
-          if [ ! -f data/monitors.csv ]; then
-            echo "::error::monitors.csv not created — all crawlers returned 0 products."
-            echo "::error::Check crawler logs in the artifact above for 403/WAF errors."
-            exit 1
+          git config user.name  "monitor-bot"
+          git config user.email "monitor-bot@users.noreply.github.com"
+
+          # crawl_status.json은 항상 커밋 (Streamlit 상태 표시용)
+          git add data/crawl_status.json 2>/dev/null || true
+          # CSV와 DB는 존재할 때만 커밋
+          [ -f data/monitors.csv ] && git add data/monitors.csv || true
+          [ -f data/monitors.db ]  && git add data/monitors.db  || true
+
+          if git diff --cached --quiet; then
+            echo "변경 없음 — 커밋 스킵"
+          else
+            git commit -m "data: monitor prices $(date +'%Y-%m-%d %H:%M UTC')"
+            git push origin main
+            echo "✅ 커밋 및 푸시 완료"
           fi
-          ROWS=$(tail -n +2 data/monitors.csv | wc -l)
-          echo "monitors.csv rows: $ROWS"
-          if [ "$ROWS" -eq 0 ]; then
-            echo "::error::monitors.csv exists but has 0 data rows."
-            exit 1
-          fi
-          echo "✅ $ROWS products collected"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload logs as artifact
         if: always()
@@ -132,17 +139,17 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      - name: Commit results to repository
+      # 0개 수집이면 워크플로우를 FAILURE로 표시 (커밋 후에 실행)
+      - name: Verify collected data
         run: |
-          git config user.name  "monitor-bot"
-          git config user.email "monitor-bot@users.noreply.github.com"
-          git add data/monitors.csv data/monitors.db
-          if git diff --cached --quiet; then
-            echo "No new data — skipping commit"
-          else
-            git commit -m "data: monitor prices $(date +'%Y-%m-%d %H:%M UTC')"
-            git push origin main
-            echo "✅ Data committed and pushed"
+          if [ ! -f data/monitors.csv ]; then
+            echo "::error::failed: 0 products collected — monitors.csv 없음"
+            exit 1
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ROWS=$(tail -n +2 data/monitors.csv | wc -l)
+          echo "CSV rows: $ROWS"
+          if [ "$ROWS" -eq 0 ]; then
+            echo "::error::failed: 0 products collected — CSV 0행"
+            exit 1
+          fi
+          echo "✅ $ROWS개 수집 완료"
