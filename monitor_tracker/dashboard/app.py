@@ -19,12 +19,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-REPO          = "byeongmin1986-cmd/my-news-app"
-BRANCH        = "main"
-WORKFLOW_FILE = "crawler.yml"
-RAW_BASE      = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/monitor_tracker/data"
-RAW_CSV       = f"{RAW_BASE}/monitors.csv"
-RAW_STATUS    = f"{RAW_BASE}/crawl_status.json"
+REPO           = "byeongmin1986-cmd/my-news-app"
+BRANCH         = "main"
+WORKFLOW_FILE  = "crawler.yml"
+DEBUG_WORKFLOW = "crawl_debug.yml"
+RAW_BASE       = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/monitor_tracker/data"
+RAW_CSV        = f"{RAW_BASE}/monitors.csv"
+RAW_STATUS     = f"{RAW_BASE}/crawl_status.json"
+RAW_DEBUG      = f"{RAW_BASE}/debug_results.json"
 
 # ── 데이터 로드 함수들 ────────────────────────────────────────
 
@@ -102,11 +104,38 @@ def trigger_crawl(token: str, site: str = "", max_pages: str = "10") -> tuple[bo
         return True, "✅ GitHub Actions 실행 시작! 약 5~10분 후 아래 상태가 업데이트됩니다."
     return False, f"❌ 오류 ({r.status_code}): {r.text[:300]}"
 
+
+def trigger_debug(token: str, site: str = "") -> tuple[bool, str]:
+    if not token:
+        return False, "Streamlit Secrets에 GITHUB_TOKEN이 없습니다."
+    r = requests.post(
+        f"https://api.github.com/repos/{REPO}/actions/workflows/{DEBUG_WORKFLOW}/dispatches",
+        headers={"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"},
+        json={"ref": BRANCH, "inputs": {"site": site}},
+        timeout=15,
+    )
+    if r.status_code == 204:
+        return True, "✅ 디버그 진단 시작! 약 3~5분 후 아래 **🔄 새로고침** 버튼을 눌러 결과를 확인하세요."
+    return False, f"❌ 오류 ({r.status_code}): {r.text[:300]}"
+
+
+@st.cache_data(ttl=60)
+def load_debug_results() -> dict:
+    try:
+        r = requests.get(RAW_DEBUG, timeout=10)
+        if r.status_code == 404:
+            return {"_error": "not_found"}
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        return {"_error": str(e)}
+
 # ═══════════════════════════════════════════════════════════════
-token  = st.secrets.get("GITHUB_TOKEN", "")
-status = load_crawl_status()
+token        = st.secrets.get("GITHUB_TOKEN", "")
+status       = load_crawl_status()
 df, load_err = load_data()
-runs   = get_workflow_runs(token)
+runs         = get_workflow_runs(token)
+debug_data   = load_debug_results()
 
 st.title("🖥️ Africa Monitor Price Tracker")
 st.caption("Kenya / Ghana / Nigeria — 실제 온라인 리테일러 가격 수집")
@@ -312,7 +341,106 @@ else:
 st.divider()
 
 # ══════════════════════════════════════════════════
-# 섹션 5: 데이터 보기 및 다운로드
+# 섹션 5: 디버그 진단
+# ══════════════════════════════════════════════════
+st.subheader("🔍 사이트별 디버그 진단")
+st.caption("WAF 차단 여부, 실제 HTTP 상태, 응답 미리보기를 확인합니다.")
+
+# 진단 실행 버튼
+dcols = st.columns(4)
+with dcols[0]:
+    if st.button("🔬 전체 진단 실행", use_container_width=True):
+        ok, msg = trigger_debug(token)
+        st.success(msg) if ok else st.error(msg)
+with dcols[1]:
+    if st.button("🇬🇭 CompuGhana 진단", use_container_width=True):
+        ok, msg = trigger_debug(token, site="ghana_compughana")
+        st.success(msg) if ok else st.error(msg)
+with dcols[2]:
+    if st.button("🇰🇪 Jumia Kenya 진단", use_container_width=True):
+        ok, msg = trigger_debug(token, site="kenya_jumia")
+        st.success(msg) if ok else st.error(msg)
+with dcols[3]:
+    if st.button("🇳🇬 Jumia Nigeria 진단", use_container_width=True):
+        ok, msg = trigger_debug(token, site="nigeria_jumia")
+        st.success(msg) if ok else st.error(msg)
+
+# 진단 결과 표시
+if "_error" in debug_data:
+    if debug_data["_error"] == "not_found":
+        st.info(
+            "아직 진단이 실행된 적 없습니다. "
+            "위 버튼으로 진단을 시작하면 3~5분 후 결과가 여기에 표시됩니다."
+        )
+    else:
+        st.warning(f"디버그 결과 로드 실패: {debug_data['_error']}")
+else:
+    run_at   = debug_data.get("run_at", "")[:16].replace("T", " ")
+    key_set  = debug_data.get("scraperapi_key_set", False)
+    st.caption(
+        f"마지막 진단: {run_at} UTC | "
+        f"SCRAPERAPI_KEY: {'✅ 설정됨' if key_set else '❌ 없음'}"
+    )
+
+    CLASSIF_COLOR = {
+        "JSON_OK": "🟢",
+        "HTML_OK": "🟢",
+        "HTTP_200_OK": "🟢",
+        "HTTP_200_WAF": "🔴",
+        "HTTP_403": "🔴",
+        "HTTP_404": "🟡",
+        "HTTP_429": "🟡",
+        "HTTP_503": "🔴",
+        "TIMEOUT": "🔴",
+        "CONNECTION": "🔴",
+        "JSON_EMPTY": "🟡",
+        "HTML_OK_WOOCOMMERCE_NO": "🟡",
+        "SKIPPED": "⚫",
+        "REQUEST_FAILED": "🔴",
+    }
+
+    def classif_icon(c: str) -> str:
+        for k, v in CLASSIF_COLOR.items():
+            if c.startswith(k):
+                return v
+        return "⚪"
+
+    for site_key, site_info in debug_data.get("sites", {}).items():
+        label = site_info.get("label", site_key)
+        best  = site_info.get("best", "")
+        tests = site_info.get("tests", [])
+        best_icon = classif_icon(best)
+
+        with st.expander(f"{best_icon} **{label}** — best: `{best}`", expanded=True):
+            for t in tests:
+                c     = t.get("classification", "")
+                icon  = classif_icon(c)
+                desc  = t.get("desc", "")
+                stat  = t.get("status")
+                cnt   = t.get("item_count", 0)
+                err   = t.get("error")
+                body  = t.get("body_preview", "")
+
+                label_str = f"{icon} `{c}`"
+                if stat is not None:
+                    label_str += f" HTTP {stat}"
+                if cnt:
+                    label_str += f" ({cnt}개 항목)"
+                if err:
+                    label_str += f" ⚠ {err[:60]}"
+
+                with st.expander(f"&nbsp;&nbsp;{label_str} — {desc}", expanded=False):
+                    st.write(f"**URL:** `{t.get('url', '')}`")
+                    st.write(f"**Method:** `{t.get('method', '')}` | **Content-Type:** `{t.get('content_type', '')}`")
+                    if body:
+                        st.code(body[:500], language="text")
+                    else:
+                        st.caption("응답 없음")
+
+st.divider()
+
+# ══════════════════════════════════════════════════
+# 섹션 6: 데이터 보기 및 다운로드
 # ══════════════════════════════════════════════════
 if df.empty:
     st.info("데이터가 없습니다. 크롤링을 먼저 실행하세요.")
