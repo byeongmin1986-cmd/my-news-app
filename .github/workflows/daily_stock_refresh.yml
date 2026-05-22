@@ -1,0 +1,26 @@
+name: 📈 Daily Stock Dashboard Refresh
+
+on:
+  schedule:
+    # 매일 KST 오전 9시 (UTC 00:00) 실행
+    - cron: "0 0 * * 1-5"   # 월~금 (평일만)
+  workflow_dispatch:          # 수동 실행도 가능
+
+jobs:
+  ping-streamlit:
+    name: Wake up Streamlit Cloud app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping app to warm cache
+        run: |
+          # Streamlit Cloud URL을 아래에 입력하세요 (예: https://your-app.streamlit.app)
+          APP_URL="${{ secrets.STREAMLIT_APP_URL }}"
+          if [ -z "$APP_URL" ]; then
+            echo "⚠️ STREAMLIT_APP_URL 시크릿이 설정되지 않았습니다."
+            echo "GitHub 저장소 Settings → Secrets에 STREAMLIT_APP_URL을 추가하세요."
+            exit 0
+          fi
+          echo "🔔 앱 캐시 웜업: $APP_URL"
+          curl -s -o /dev/null -w "HTTP %{http_code}" --max-time 60 "$APP_URL" || true
+          echo ""
+          echo "✅ 완료"
