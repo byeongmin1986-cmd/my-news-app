@@ -7,7 +7,6 @@ import requests
 import streamlit as st
 from bs4 import BeautifulSoup
 
-# ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="SK하이닉스 ETF 대시보드",
     page_icon="📈",
@@ -59,7 +58,6 @@ def _parse_int(text: str):
 
 # ── Data fetching (priority: Naver → Daum → pykrx) ───────────────────────────
 def fetch_naver(code: str):
-    """Naver Finance HTML scraping."""
     try:
         url = f"https://finance.naver.com/item/main.nhn?code={code}"
         resp = requests.get(url, headers=HEADERS, timeout=8)
@@ -84,7 +82,6 @@ def fetch_naver(code: str):
 
 
 def fetch_daum(code: str):
-    """Daum Finance JSON API."""
     try:
         headers = {**HEADERS, "Referer": "https://finance.daum.net"}
         url = f"https://finance.daum.net/api/quotes/A{code}"
@@ -101,7 +98,6 @@ def fetch_daum(code: str):
 
 
 def fetch_pykrx(code: str):
-    """pykrx – direct KRX query."""
     try:
         from pykrx import stock  # noqa: PLC0415
 
@@ -117,7 +113,6 @@ def fetch_pykrx(code: str):
 
 
 def get_price_data(code: str):
-    """Try each source; return first success."""
     now = datetime.now(KST)
     errors: dict = {}
     for label, fn in [
@@ -130,6 +125,48 @@ def get_price_data(code: str):
             return prev, cur, label, now, errors
         errors[label] = err or "알 수 없는 오류"
     return None, None, None, now, errors
+
+
+# ── Investment math ───────────────────────────────────────────────────────────
+def calc_split(
+    unit_budget: float,
+    buy_price: int,
+    sell_price: int,
+    buy_fee_rate: float,
+    sell_fee_rate: float,
+    tax_rate: float,
+) -> dict:
+    """Return per-split figures. Quantity uses floor; sell_price is buy_price-based."""
+    # Cost per share including buy commission
+    cost_per_share = buy_price * (1 + buy_fee_rate)
+    qty = math.floor(unit_budget / cost_per_share)  # floor per spec
+
+    buy_principal = qty * buy_price
+    buy_fee = qty * buy_price * buy_fee_rate
+    total_cost = buy_principal + buy_fee          # total cash out per split
+    remaining = unit_budget - total_cost
+
+    gross_sell = qty * sell_price
+    sell_fee = qty * sell_price * sell_fee_rate
+    sell_tax = qty * sell_price * tax_rate
+    net_sell = gross_sell - sell_fee - sell_tax   # cash in after fees/tax
+
+    pnl = net_sell - total_cost
+    pnl_rate = (pnl / total_cost * 100) if total_cost > 0 else 0.0
+
+    return dict(
+        qty=qty,
+        buy_principal=buy_principal,
+        buy_fee=buy_fee,
+        total_cost=total_cost,
+        remaining=remaining,
+        gross_sell=gross_sell,
+        sell_fee=sell_fee,
+        sell_tax=sell_tax,
+        net_sell=net_sell,
+        pnl=pnl,
+        pnl_rate=pnl_rate,
+    )
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -160,6 +197,35 @@ def main():
         st.subheader("호가 단위")
         tick_label = st.radio("5원 단위 처리", ["올림 (기본)", "반올림"], index=0)
         tick_method = "ceil" if "올림" in tick_label else "round"
+        tick_short = tick_label.split(" ")[0]
+
+        st.divider()
+        st.subheader("💸 수수료 / 세금")
+        use_fees = st.toggle("수수료 계산 포함", value=False)
+        if use_fees:
+            buy_fee_pct = st.number_input(
+                "매수 수수료율 (%)", value=0.015, step=0.001, format="%.3f", min_value=0.0
+            )
+            sell_fee_pct = st.number_input(
+                "매도 수수료율 (%)", value=0.015, step=0.001, format="%.3f", min_value=0.0
+            )
+            use_tax = st.checkbox(
+                "거래세 포함",
+                value=False,
+                help="국내 상장 ETF는 증권거래세 면제. 필요 시 직접 입력하세요.",
+            )
+            tax_pct = (
+                st.number_input("세율 (%)", value=0.0, step=0.01, format="%.3f", min_value=0.0)
+                if use_tax
+                else 0.0
+            )
+        else:
+            buy_fee_pct = sell_fee_pct = tax_pct = 0.0
+            use_tax = False
+
+        buy_fee_rate = buy_fee_pct / 100
+        sell_fee_rate = sell_fee_pct / 100
+        tax_rate = tax_pct / 100
 
         st.divider()
         st.subheader("투자 설정")
@@ -171,7 +237,9 @@ def main():
             format="%d",
         )
         split_count = int(
-            st.number_input("분할 수", value=DEFAULT_SPLIT_COUNT, min_value=1, max_value=20, step=1)
+            st.number_input(
+                "분할 수", value=DEFAULT_SPLIT_COUNT, min_value=1, max_value=20, step=1
+            )
         )
 
         st.divider()
@@ -192,12 +260,12 @@ def main():
             f"업데이트: {fetch_time.strftime('%Y-%m-%d %H:%M:%S KST')}"
         )
     else:
-        st.warning("⚠️ 자동 데이터 조회 실패. 전일 종가를 직접 입력해주세요.")
-        with st.expander("🔍 오류 상세"):
+        st.warning("⚠️ 자동 데이터 조회 실패. 아래에서 전일 종가를 직접 입력해주세요.")
+        with st.expander("🔍 조회 오류 상세"):
             for src, err in errors.items():
                 st.text(f"{src}: {err}")
 
-    # ── Manual inputs ─────────────────────────────────────────────────────────
+    # ── Manual inputs — always rendered; pre-filled when auto succeeds ─────────
     col_in1, col_in2 = st.columns(2)
     with col_in1:
         suffix = " · 자동조회 성공" if prev_auto else " · ✏️ 직접 입력 필요"
@@ -218,10 +286,12 @@ def main():
         )
 
     # ── Price calculations ────────────────────────────────────────────────────
+    # 1) buy_price: 전일 종가 기준
     buy_price = apply_tick(prev_close * (1 + buy_rate / 100), tick_method)
-    # Sell target based on actual purchase price → profit-generating structure
+    # 2) sell_price: buy_price 기준 → 수익 구조 보장
+    #    sell_price = ceil_to_5(buy_price * (1 + sell_rate/100))
     sell_price = apply_tick(buy_price * (1 + sell_rate / 100), tick_method)
-    # Reference only: sell based on prev_close (loss structure when buy_rate > sell_rate)
+    # 참고용: 전일 종가 기준 매도가 (손실 구조 비교)
     sell_price_ref = apply_tick(prev_close * (1 + sell_rate / 100), tick_method)
 
     # ── Stock info ────────────────────────────────────────────────────────────
@@ -243,21 +313,26 @@ def main():
     st.divider()
     st.subheader("🎯 매수/매도 기준가")
 
-    with st.expander("ℹ️ 매도 기준가 계산 방식 안내 (클릭하여 펼치기)"):
+    loss_warn = sell_price_ref < buy_price
+    with st.expander("ℹ️ 매도 기준가 계산 방식 안내"):
         st.markdown(
             f"""
-**⚠️ 전일 종가 기준 매도 시 손실 구조 주의**
+**⚠️ 전일 종가 기준 매도 시 {'손실' if loss_warn else '수익'} 구조**
 
 | 구분 | 가격 |
 |------|------|
-| 매수 기준가 (전일 종가 +{buy_rate:.1f}%) | {fmt(buy_price)} |
-| 매도가 – 전일 종가 기준 +{sell_rate:.1f}% | {fmt(sell_price_ref)} |
+| 매수 기준가 (전일 종가 +{buy_rate:.2f}%) | {fmt(buy_price)} |
+| 매도가 — 전일 종가 기준 +{sell_rate:.2f}% | {fmt(sell_price_ref)} |
 
-→ 매도가 {fmt(sell_price_ref)} < 매수가 {fmt(buy_price)} → **❌ 손실 구조**
+→ {'매도가 < 매수가 → **❌ 손실 구조**' if loss_warn else '매도가 ≥ 매수가'}
 
 **✅ 본 앱 적용 방식: 실제 매수가 기준 매도**
 
-매도 목표가 = 매수가 {fmt(buy_price)} × {1 + sell_rate / 100:.4f} = **{fmt(sell_price)}** → **수익 구조**
+```
+sell_price = ceil_to_5(buy_price × {1 + sell_rate / 100:.5f})
+           = ceil_to_5({buy_price:,} × {1 + sell_rate / 100:.5f})
+           = {fmt(sell_price)}   → 수익 구조
+```
 """
         )
 
@@ -265,9 +340,9 @@ def main():
     with pc1:
         st.info(
             f"### 🟢 매수 기준가 &nbsp; {fmt(buy_price)}\n\n"
-            f"전일 종가 {fmt(prev_close)} × {1 + buy_rate / 100:.4f}  \n"
-            f"= {prev_close * (1 + buy_rate / 100):,.1f}원  \n"
-            f"→ 5원 단위 **{tick_label.split(' ')[0]}** → **{fmt(buy_price)}**"
+            f"전일 종가 {fmt(prev_close)} × {1 + buy_rate / 100:.5f}  \n"
+            f"= {prev_close * (1 + buy_rate / 100):,.2f}원  \n"
+            f"→ 5원 단위 **{tick_short}** → **{fmt(buy_price)}**"
         )
         if current_price > 0:
             if current_price >= buy_price:
@@ -278,9 +353,9 @@ def main():
     with pc2:
         st.info(
             f"### 🔴 매도 목표가 &nbsp; {fmt(sell_price)}\n\n"
-            f"매수가 {fmt(buy_price)} × {1 + sell_rate / 100:.4f}  \n"
-            f"= {buy_price * (1 + sell_rate / 100):,.1f}원  \n"
-            f"→ 5원 단위 **{tick_label.split(' ')[0]}** → **{fmt(sell_price)}**"
+            f"매수가 {fmt(buy_price)} × {1 + sell_rate / 100:.5f}  \n"
+            f"= {buy_price * (1 + sell_rate / 100):,.2f}원  \n"
+            f"→ 5원 단위 **{tick_short}** → **{fmt(sell_price)}**"
         )
         if current_price > 0:
             if current_price >= sell_price:
@@ -290,145 +365,150 @@ def main():
 
     # ── Investment calculations ───────────────────────────────────────────────
     unit_budget = total_budget / split_count
-    qty_per = math.floor(unit_budget / buy_price)
-    used_per = qty_per * buy_price
-    remaining_per = unit_budget - used_per
+    s = calc_split(unit_budget, buy_price, sell_price, buy_fee_rate, sell_fee_rate, tax_rate)
 
-    total_qty = qty_per * split_count
-    total_used = used_per * split_count
-    # Remaining = per-split leftovers + any budget not distributed (floating point)
-    total_remaining = total_budget - total_used
+    qty_per       = s["qty"]
+    buy_principal = s["buy_principal"]
+    buy_fee       = s["buy_fee"]
+    total_cost    = s["total_cost"]
+    remaining     = s["remaining"]
+    gross_sell    = s["gross_sell"]
+    sell_fee      = s["sell_fee"]
+    sell_tax      = s["sell_tax"]
+    net_sell      = s["net_sell"]
+    pnl           = s["pnl"]
+    pnl_rate      = s["pnl_rate"]
 
-    total_sell_val = total_qty * sell_price
-    profit = total_sell_val - total_used
-    profit_rate = (profit / total_used * 100) if total_used > 0 else 0.0
-    profit_rate_on_budget = (profit / total_budget * 100) if total_budget > 0 else 0.0
+    n = split_count
+    T_qty       = qty_per * n
+    T_principal = buy_principal * n
+    T_buy_fee   = buy_fee * n
+    T_cost      = total_cost * n
+    T_remaining = total_budget - T_cost
+    T_gross     = gross_sell * n
+    T_sell_fee  = sell_fee * n
+    T_sell_tax  = sell_tax * n
+    T_net_sell  = net_sell * n
+    T_pnl       = T_net_sell - T_cost
+    T_pnl_rate  = (T_pnl / T_cost * 100) if T_cost > 0 else 0.0
+    T_pnl_on_budget = (T_pnl / total_budget * 100) if total_budget > 0 else 0.0
 
+    fee_note = f" (수수료 {buy_fee_pct:.3f}% / {sell_fee_pct:.3f}%)" if use_fees else ""
     st.divider()
-    st.subheader(f"💰 {split_count}분할 매수/매도 계획")
+    st.subheader(f"💰 {n}분할 매수/매도 계획{fee_note}")
 
     s1, s2, s3, s4 = st.columns(4)
     s1.metric("총 투자금", fmt(total_budget))
     s1.metric("1회 분할금액", fmt(unit_budget))
-    s2.metric("1회 매수 수량", f"{qty_per:,}주")
-    s2.metric(f"{split_count}회 총 수량", f"{total_qty:,}주")
-    s3.metric("총 투자 원가", fmt(total_used))
-    s3.metric("잔여 현금 (미사용)", fmt(total_remaining))
-    s4.metric("전량 매도 예상금액", fmt(total_sell_val))
-
-    delta_color = "normal" if profit >= 0 else "inverse"
-    s4.metric(
-        "예상 수익금",
-        fmt(profit),
-        f"{profit_rate:+.2f}% (원가 대비)",
-        delta_color=delta_color,
-    )
+    s2.metric("1회 매수 수량 (floor)", f"{qty_per:,}주")
+    s2.metric(f"{n}회 총 수량", f"{T_qty:,}주")
+    cost_label = "총 투자 원가" + (" (수수료 포함)" if use_fees else "")
+    s3.metric(cost_label, fmt(T_cost))
+    s3.metric("잔여 현금 (미사용)", fmt(T_remaining))
+    sell_label = "전량 매도 예상금액" + (" (수수료/세금 차감)" if use_fees else "")
+    s4.metric(sell_label, fmt(T_net_sell))
+    delta_color = "normal" if T_pnl >= 0 else "inverse"
+    s4.metric("예상 수익금", fmt(T_pnl), f"{T_pnl_rate:+.2f}% (원가 대비)", delta_color=delta_color)
 
     # ── Buy table ─────────────────────────────────────────────────────────────
     st.subheader("📋 매수 계획표")
     buy_rows = []
     cum_qty = 0
-    cum_used = 0.0
-    for i in range(1, split_count + 1):
+    cum_cost = 0.0
+    for i in range(1, n + 1):
         cum_qty += qty_per
-        cum_used += used_per
-        buy_rows.append(
-            {
-                "회차": f"제{i}회",
-                "분할금액": f"{unit_budget:,.0f}원",
-                "매수기준가": f"{buy_price:,}원",
-                "매수수량": f"{qty_per:,}주",
-                "사용금액": f"{used_per:,.0f}원",
-                "남은현금": f"{remaining_per:,.0f}원",
-                "누적수량": f"{cum_qty:,}주",
-                "누적사용금액": f"{cum_used:,.0f}원",
-            }
-        )
+        cum_cost += total_cost
+        row: dict = {
+            "회차": f"제{i}회",
+            "분할금액": f"{unit_budget:,.0f}원",
+            "매수기준가": f"{buy_price:,}원",
+            "매수수량 (floor)": f"{qty_per:,}주",
+            "매수 원가": f"{buy_principal:,.0f}원",
+        }
+        if use_fees:
+            row["매수 수수료"] = f"{buy_fee:,.0f}원"
+            row["총 비용"] = f"{total_cost:,.0f}원"
+        row["남은현금"] = f"{remaining:,.0f}원"
+        row["누적수량"] = f"{cum_qty:,}주"
+        row["누적비용"] = f"{cum_cost:,.0f}원"
+        buy_rows.append(row)
     st.dataframe(pd.DataFrame(buy_rows), use_container_width=True, hide_index=True)
 
     # ── Sell table ────────────────────────────────────────────────────────────
     st.subheader("📋 매도 계획표")
     sell_rows = []
-    cum_sell = 0.0
-    for i in range(1, split_count + 1):
-        sell_val = qty_per * sell_price
-        cost_val = qty_per * buy_price
-        pnl = sell_val - cost_val
-        pnl_r = (pnl / cost_val * 100) if cost_val else 0.0
-        cum_sell += sell_val
-        sell_rows.append(
-            {
-                "회차": f"제{i}회",
-                "보유수량": f"{qty_per:,}주",
-                "매수기준가": f"{buy_price:,}원",
-                "매도목표가": f"{sell_price:,}원",
-                "예상매도금액": f"{sell_val:,.0f}원",
-                "투자원가": f"{cost_val:,.0f}원",
-                "예상손익": f"{pnl:+,.0f}원",
-                "손익률": f"{pnl_r:+.2f}%",
-            }
-        )
+    cum_net = 0.0
+    for i in range(1, n + 1):
+        cum_net += net_sell
+        row = {
+            "회차": f"제{i}회",
+            "보유수량": f"{qty_per:,}주",
+            "매수기준가": f"{buy_price:,}원",
+            "매도목표가": f"{sell_price:,}원",
+            "매도 총액": f"{gross_sell:,.0f}원",
+        }
+        if use_fees:
+            row["매도 수수료"] = f"{sell_fee:,.0f}원"
+            if use_tax:
+                row["거래세"] = f"{sell_tax:,.0f}원"
+            row["실수령액"] = f"{net_sell:,.0f}원"
+        row["투자원가"] = f"{total_cost:,.0f}원"
+        row["예상손익"] = f"{pnl:+,.0f}원"
+        row["손익률"] = f"{pnl_rate:+.2f}%"
+        sell_rows.append(row)
     st.dataframe(pd.DataFrame(sell_rows), use_container_width=True, hide_index=True)
 
-    # ── Final summary table ───────────────────────────────────────────────────
+    # ── Final summary ─────────────────────────────────────────────────────────
     st.divider()
     st.subheader("📊 최종 요약")
 
     col_l, col_r = st.columns(2)
     with col_l:
-        st.table(
-            pd.DataFrame(
-                {
-                    "항목": [
-                        "총 투자금",
-                        f"{split_count}분할 1회 금액",
-                        "매수 기준가",
-                        "1회 매수 가능 수량",
-                        "1회 사용 금액",
-                        "1회 잔여 현금",
-                        f"{split_count}회 총 매수 수량",
-                        "총 사용 금액",
-                        "총 잔여 현금 (미사용)",
-                    ],
-                    "값": [
-                        fmt(total_budget),
-                        fmt(unit_budget),
-                        fmt(buy_price),
-                        f"{qty_per:,}주",
-                        fmt(used_per),
-                        fmt(remaining_per),
-                        f"{total_qty:,}주",
-                        fmt(total_used),
-                        fmt(total_remaining),
-                    ],
-                }
-            )
-        )
+        left = [
+            ("총 투자금", fmt(total_budget)),
+            (f"{n}분할 1회 금액", fmt(unit_budget)),
+            ("매수 기준가", fmt(buy_price)),
+            ("1회 매수 수량 (floor)", f"{qty_per:,}주"),
+            ("1회 매수 원가", fmt(buy_principal)),
+        ]
+        if use_fees:
+            left += [
+                ("1회 매수 수수료", fmt(buy_fee)),
+                ("1회 총 비용 (원가+수수료)", fmt(total_cost)),
+            ]
+        left += [
+            ("1회 잔여 현금", fmt(remaining)),
+            (f"{n}회 총 매수 수량", f"{T_qty:,}주"),
+            ("총 투자 원가", fmt(T_principal)),
+        ]
+        if use_fees:
+            left += [
+                ("총 매수 수수료", fmt(T_buy_fee)),
+                ("총 비용 합계", fmt(T_cost)),
+            ]
+        left.append(("총 잔여 현금 (미사용)", fmt(T_remaining)))
+        st.table(pd.DataFrame(left, columns=["항목", "값"]))
+
     with col_r:
-        st.table(
-            pd.DataFrame(
-                {
-                    "항목": [
-                        "매도 목표가 (매수가 기준)",
-                        "전량 매도 예상금액",
-                        "예상 수익금",
-                        "예상 수익률 (원가 대비)",
-                        "예상 수익률 (총투자금 대비)",
-                        "데이터 출처",
-                        "업데이트 시간",
-                    ],
-                    "값": [
-                        fmt(sell_price),
-                        fmt(total_sell_val),
-                        f"{profit:+,.0f}원",
-                        f"{profit_rate:+.2f}%",
-                        f"{profit_rate_on_budget:+.2f}%",
-                        source if source else "수동 입력",
-                        fetch_time.strftime("%Y-%m-%d %H:%M:%S KST"),
-                    ],
-                }
-            )
-        )
+        right = [
+            ("매도 목표가 (매수가 기준)", fmt(sell_price)),
+            ("전량 매도 총액", fmt(T_gross)),
+        ]
+        if use_fees:
+            right += [("총 매도 수수료", fmt(T_sell_fee))]
+            if use_tax:
+                right += [("총 거래세", fmt(T_sell_tax))]
+            right += [("실 수령 예상금액", fmt(T_net_sell))]
+        else:
+            right += [("전량 매도 예상금액", fmt(T_net_sell))]
+        right += [
+            ("예상 수익금", f"{T_pnl:+,.0f}원"),
+            ("예상 수익률 (원가 대비)", f"{T_pnl_rate:+.2f}%"),
+            ("예상 수익률 (총투자금 대비)", f"{T_pnl_on_budget:+.2f}%"),
+            ("데이터 출처", source if source else "수동 입력"),
+            ("업데이트 시간", fetch_time.strftime("%Y-%m-%d %H:%M:%S KST")),
+        ]
+        st.table(pd.DataFrame(right, columns=["항목", "값"]))
 
     # ── Disclaimer ────────────────────────────────────────────────────────────
     st.divider()
