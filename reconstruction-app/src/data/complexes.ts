@@ -157,25 +157,27 @@ export const COMPLEXES: Complex[] = [
 
     prices: {
       current24py: 185000,
+      current32py: 233000,
       current34py: 245000,
       current42py: 310000,
       recentTransactionDate: '2025-05',
       highestPrice24py: 210000,
+      highestPrice32py: 265000,
       highestPriceDate: '2021-11',
       recoveryRate: 88,
       priceHistory: [
-        { date: '2020-01', price24py: 110000 },
-        { date: '2020-07', price24py: 130000 },
-        { date: '2021-01', price24py: 160000 },
-        { date: '2021-07', price24py: 195000 },
-        { date: '2022-01', price24py: 205000 },
-        { date: '2022-07', price24py: 190000 },
-        { date: '2023-01', price24py: 168000 },
-        { date: '2023-07', price24py: 172000 },
-        { date: '2024-01', price24py: 175000 },
-        { date: '2024-07', price24py: 180000 },
-        { date: '2025-01', price24py: 183000 },
-        { date: '2025-05', price24py: 185000 },
+        { date: '2020-01', price24py: 110000, price32py: 138000 },
+        { date: '2020-07', price24py: 130000, price32py: 164000 },
+        { date: '2021-01', price24py: 160000, price32py: 202000 },
+        { date: '2021-07', price24py: 195000, price32py: 246000 },
+        { date: '2022-01', price24py: 205000, price32py: 258000 },
+        { date: '2022-07', price24py: 190000, price32py: 239000 },
+        { date: '2023-01', price24py: 168000, price32py: 212000 },
+        { date: '2023-07', price24py: 172000, price32py: 217000 },
+        { date: '2024-01', price24py: 175000, price32py: 220000 },
+        { date: '2024-07', price24py: 180000, price32py: 227000 },
+        { date: '2025-01', price24py: 183000, price32py: 230000 },
+        { date: '2025-05', price24py: 185000, price32py: 233000 },
       ],
       verified: false,
       dataSource: '확인 필요 (국토부 실거래가 공개시스템 재확인 권장)',
@@ -284,25 +286,27 @@ export const COMPLEXES: Complex[] = [
 
     prices: {
       current24py: 148000,
+      current32py: 186000,
       current34py: 195000,
       current42py: 250000,
       recentTransactionDate: '2025-04',
       highestPrice24py: 175000,
+      highestPrice32py: 220000,
       highestPriceDate: '2021-10',
       recoveryRate: 85,
       priceHistory: [
-        { date: '2020-01', price24py: 90000 },
-        { date: '2020-07', price24py: 105000 },
-        { date: '2021-01', price24py: 130000 },
-        { date: '2021-07', price24py: 162000 },
-        { date: '2022-01', price24py: 170000 },
-        { date: '2022-07', price24py: 158000 },
-        { date: '2023-01', price24py: 138000 },
-        { date: '2023-07', price24py: 140000 },
-        { date: '2024-01', price24py: 143000 },
-        { date: '2024-07', price24py: 146000 },
-        { date: '2025-01', price24py: 147000 },
-        { date: '2025-04', price24py: 148000 },
+        { date: '2020-01', price24py: 90000, price32py: 113000 },
+        { date: '2020-07', price24py: 105000, price32py: 132000 },
+        { date: '2021-01', price24py: 130000, price32py: 163000 },
+        { date: '2021-07', price24py: 162000, price32py: 204000 },
+        { date: '2022-01', price24py: 170000, price32py: 214000 },
+        { date: '2022-07', price24py: 158000, price32py: 199000 },
+        { date: '2023-01', price24py: 138000, price32py: 173000 },
+        { date: '2023-07', price24py: 140000, price32py: 176000 },
+        { date: '2024-01', price24py: 143000, price32py: 180000 },
+        { date: '2024-07', price24py: 146000, price32py: 183000 },
+        { date: '2025-01', price24py: 147000, price32py: 185000 },
+        { date: '2025-04', price24py: 148000, price32py: 186000 },
       ],
       verified: false,
       dataSource: '확인 필요 (국토부 실거래가 공개시스템 재확인 권장)',
@@ -405,25 +409,27 @@ export const COMPLEXES: Complex[] = [
 
     prices: {
       current24py: 132000,
+      current32py: 165000,
       current34py: 173000,
       current42py: 218000,
       recentTransactionDate: '2025-04',
       highestPrice24py: 158000,
+      highestPrice32py: 198000,
       highestPriceDate: '2021-10',
       recoveryRate: 84,
       priceHistory: [
-        { date: '2020-01', price24py: 82000 },
-        { date: '2020-07', price24py: 95000 },
-        { date: '2021-01', price24py: 118000 },
-        { date: '2021-07', price24py: 148000 },
-        { date: '2022-01', price24py: 154000 },
-        { date: '2022-07', price24py: 143000 },
-        { date: '2023-01', price24py: 122000 },
-        { date: '2023-07', price24py: 125000 },
-        { date: '2024-01', price24py: 128000 },
-        { date: '2024-07', price24py: 130000 },
-        { date: '2025-01', price24py: 131000 },
-        { date: '2025-04', price24py: 132000 },
+        { date: '2020-01', price24py: 82000, price32py: 103000 },
+        { date: '2020-07', price24py: 95000, price32py: 119000 },
+        { date: '2021-01', price24py: 118000, price32py: 148000 },
+        { date: '2021-07', price24py: 148000, price32py: 185000 },
+        { date: '2022-01', price24py: 154000, price32py: 193000 },
+        { date: '2022-07', price24py: 143000, price32py: 179000 },
+        { date: '2023-01', price24py: 122000, price32py: 153000 },
+        { date: '2023-07', price24py: 125000, price32py: 156000 },
+        { date: '2024-01', price24py: 128000, price32py: 160000 },
+        { date: '2024-07', price24py: 130000, price32py: 163000 },
+        { date: '2025-01', price24py: 131000, price32py: 164000 },
+        { date: '2025-04', price24py: 132000, price32py: 165000 },
       ],
       verified: false,
       dataSource: '확인 필요 (국토부 실거래가 공개시스템 재확인 권장)',
@@ -523,25 +529,27 @@ export const COMPLEXES: Complex[] = [
 
     prices: {
       current24py: 138000,
+      current32py: 172000,
       current34py: 180000,
       current42py: 225000,
       recentTransactionDate: '2025-04',
       highestPrice24py: 162000,
+      highestPrice32py: 202000,
       highestPriceDate: '2021-11',
       recoveryRate: 85,
       priceHistory: [
-        { date: '2020-01', price24py: 84000 },
-        { date: '2020-07', price24py: 97000 },
-        { date: '2021-01', price24py: 122000 },
-        { date: '2021-07', price24py: 152000 },
-        { date: '2022-01', price24py: 158000 },
-        { date: '2022-07', price24py: 147000 },
-        { date: '2023-01', price24py: 126000 },
-        { date: '2023-07', price24py: 128000 },
-        { date: '2024-01', price24py: 132000 },
-        { date: '2024-07', price24py: 135000 },
-        { date: '2025-01', price24py: 137000 },
-        { date: '2025-04', price24py: 138000 },
+        { date: '2020-01', price24py: 84000, price32py: 105000 },
+        { date: '2020-07', price24py: 97000, price32py: 121000 },
+        { date: '2021-01', price24py: 122000, price32py: 152000 },
+        { date: '2021-07', price24py: 152000, price32py: 189000 },
+        { date: '2022-01', price24py: 158000, price32py: 197000 },
+        { date: '2022-07', price24py: 147000, price32py: 183000 },
+        { date: '2023-01', price24py: 126000, price32py: 157000 },
+        { date: '2023-07', price24py: 128000, price32py: 160000 },
+        { date: '2024-01', price24py: 132000, price32py: 165000 },
+        { date: '2024-07', price24py: 135000, price32py: 168000 },
+        { date: '2025-01', price24py: 137000, price32py: 171000 },
+        { date: '2025-04', price24py: 138000, price32py: 172000 },
       ],
       verified: false,
       dataSource: '확인 필요 (국토부 실거래가 공개시스템 재확인 권장)',
@@ -640,25 +648,27 @@ export const COMPLEXES: Complex[] = [
 
     prices: {
       current24py: 128000,
+      current32py: 159000,
       current34py: 167000,
       current42py: 210000,
       recentTransactionDate: '2025-04',
       highestPrice24py: 154000,
+      highestPrice32py: 191000,
       highestPriceDate: '2021-10',
       recoveryRate: 83,
       priceHistory: [
-        { date: '2020-01', price24py: 80000 },
-        { date: '2020-07', price24py: 92000 },
-        { date: '2021-01', price24py: 116000 },
-        { date: '2021-07', price24py: 144000 },
-        { date: '2022-01', price24py: 150000 },
-        { date: '2022-07', price24py: 140000 },
-        { date: '2023-01', price24py: 120000 },
-        { date: '2023-07', price24py: 122000 },
-        { date: '2024-01', price24py: 125000 },
-        { date: '2024-07', price24py: 127000 },
-        { date: '2025-01', price24py: 127500 },
-        { date: '2025-04', price24py: 128000 },
+        { date: '2020-01', price24py: 80000, price32py: 99000 },
+        { date: '2020-07', price24py: 92000, price32py: 114000 },
+        { date: '2021-01', price24py: 116000, price32py: 144000 },
+        { date: '2021-07', price24py: 144000, price32py: 179000 },
+        { date: '2022-01', price24py: 150000, price32py: 186000 },
+        { date: '2022-07', price24py: 140000, price32py: 174000 },
+        { date: '2023-01', price24py: 120000, price32py: 149000 },
+        { date: '2023-07', price24py: 122000, price32py: 152000 },
+        { date: '2024-01', price24py: 125000, price32py: 155000 },
+        { date: '2024-07', price24py: 127000, price32py: 158000 },
+        { date: '2025-01', price24py: 127500, price32py: 158000 },
+        { date: '2025-04', price24py: 128000, price32py: 159000 },
       ],
       verified: false,
       dataSource: '확인 필요 (국토부 실거래가 공개시스템 재확인 권장)',
@@ -722,6 +732,27 @@ export const COMPLEXES: Complex[] = [
 
 export const getComplexById = (id: string): Complex | undefined =>
   COMPLEXES.find((c) => c.id === id);
+
+// 비교 기준 평형: 현재 아파트 24평, 타겟 아파트 32평
+export function getComparisonPrice(complex: Complex): number {
+  return complex.type === 'target' && complex.prices.current32py
+    ? complex.prices.current32py
+    : complex.prices.current24py;
+}
+
+export function getComparisonSize(complex: Complex): string {
+  return complex.type === 'target' ? '32평' : '24평';
+}
+
+export function getComparisonHighestPrice(complex: Complex): number {
+  return complex.type === 'target' && complex.prices.highestPrice32py
+    ? complex.prices.highestPrice32py
+    : complex.prices.highestPrice24py;
+}
+
+export function getComparisonPriceKey(complex: Complex): 'price24py' | 'price32py' {
+  return complex.type === 'target' ? 'price32py' : 'price24py';
+}
 
 export const TARGET_COMPLEXES = COMPLEXES.filter((c) => c.type === 'target');
 

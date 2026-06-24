@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { TARGET_COMPLEXES, CURRENT_APARTMENT } from '@/data/complexes';
+import { TARGET_COMPLEXES, CURRENT_APARTMENT, getComparisonPrice, getComparisonSize } from '@/data/complexes';
 import { formatPrice, calcFeasibility, DEFAULT_SIMULATION, calcOpportunityCost } from '@/data/calculations';
 import FeasibilityBadge from '@/components/FeasibilityBadge';
 import StageBadge from '@/components/StageBadge';
@@ -16,7 +16,7 @@ export default function SummaryPage() {
   // 기회비용 계산 (10년 기준, 인덕원 3% vs 송파 6% 연평균 상승 가정)
   const opp = calcOpportunityCost(
     CURRENT_APARTMENT.prices.current24py,
-    sorted[0].prices.current24py,
+    getComparisonPrice(sorted[0]),
     10,
     6,
     3
@@ -186,8 +186,8 @@ export default function SummaryPage() {
                     <p className="text-sm text-gray-600 mb-2">{complex.recommendationSummary}</p>
                     <div className="flex items-center gap-4 text-sm">
                       <div>
-                        <span className="text-gray-400 text-xs">24평(추정) </span>
-                        <span className="font-bold text-gray-900">{formatPrice(complex.prices.current24py)}</span>
+                        <span className="text-gray-400 text-xs">{getComparisonSize(complex)}(추정) </span>
+                        <span className="font-bold text-gray-900">{formatPrice(getComparisonPrice(complex))}</span>
                       </div>
                       <div>
                         <span className="text-gray-400 text-xs">종합 점수 </span>

@@ -1,6 +1,7 @@
 export interface PricePoint {
   date: string; // YYYY-MM
   price24py: number; // 만원
+  price32py?: number;
   price34py?: number;
   price42py?: number;
 }
@@ -48,10 +49,12 @@ export interface Complex {
 
   prices: {
     current24py: number;
+    current32py?: number;
     current34py: number;
     current42py: number;
     recentTransactionDate: string;
     highestPrice24py: number;
+    highestPrice32py?: number;
     highestPriceDate: string;
     recoveryRate: number;
     priceHistory: PricePoint[];

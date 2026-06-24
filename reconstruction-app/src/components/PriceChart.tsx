@@ -5,6 +5,7 @@ import { PricePoint } from '@/data/types';
 interface Props {
   data: PricePoint[];
   highestPrice?: number;
+  priceKey?: 'price24py' | 'price32py';
 }
 
 function formatTick(manwon: number): string {
@@ -32,14 +33,14 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   return null;
 }
 
-export default function PriceChart({ data, highestPrice }: Props) {
+export default function PriceChart({ data, highestPrice, priceKey = 'price24py' }: Props) {
   const formatted = data.map((d) => ({
     ...d,
     date: d.date.replace('-01', '.01').replace('-04', '.04').replace('-07', '.07').replace('-10', '.10'),
   }));
 
-  const min = Math.min(...data.map((d) => d.price24py));
-  const max = Math.max(...data.map((d) => d.price24py));
+  const min = Math.min(...data.map((d) => (d[priceKey] ?? d.price24py) as number));
+  const max = Math.max(...data.map((d) => (d[priceKey] ?? d.price24py) as number));
   const padding = (max - min) * 0.15;
 
   return (
@@ -73,7 +74,7 @@ export default function PriceChart({ data, highestPrice }: Props) {
           )}
           <Line
             type="monotone"
-            dataKey="price24py"
+            dataKey={priceKey}
             stroke="#3b82f6"
             strokeWidth={2.5}
             dot={{ r: 3, fill: '#3b82f6' }}

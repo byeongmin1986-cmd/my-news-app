@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getComplexById, TARGET_COMPLEXES } from '@/data/complexes';
+import { getComplexById, TARGET_COMPLEXES, getComparisonPrice, getComparisonSize, getComparisonHighestPrice, getComparisonPriceKey } from '@/data/complexes';
 import { formatPrice, calcFeasibility, DEFAULT_SIMULATION, calcStageProgress } from '@/data/calculations';
 import StageBadge from '@/components/StageBadge';
 import ScoreBar from '@/components/ScoreBar';
@@ -63,8 +63,8 @@ export default async function ComplexDetailPage({ params }: { params: Promise<{ 
           </div>
           <div className="flex gap-3 flex-wrap sm:flex-col sm:text-right">
             <div className="bg-blue-50 rounded-xl p-3">
-              <p className="text-xs text-blue-500">24평 현재 시세 (추정)</p>
-              <p className="text-2xl font-black text-blue-700">{formatPrice(complex.prices.current24py)}</p>
+              <p className="text-xs text-blue-500">{getComparisonSize(complex)} 현재 시세 (추정)</p>
+              <p className="text-2xl font-black text-blue-700">{formatPrice(getComparisonPrice(complex))}</p>
             </div>
             {complex.type === 'target' && <FeasibilityBadge status={f.status} className="self-start sm:self-end" />}
           </div>
@@ -90,16 +90,16 @@ export default async function ComplexDetailPage({ params }: { params: Promise<{ 
       {/* Price chart */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <h2 className="text-lg font-black text-gray-900">가격 추이 (24평 기준)</h2>
+          <h2 className="text-lg font-black text-gray-900">가격 추이 ({getComparisonSize(complex)} 기준)</h2>
           <div className="flex gap-3">
             <div className="text-center">
               <p className="text-xs text-gray-400">최고가</p>
-              <p className="text-sm font-bold text-red-600">{formatPrice(complex.prices.highestPrice24py)}</p>
+              <p className="text-sm font-bold text-red-600">{formatPrice(getComparisonHighestPrice(complex))}</p>
               <p className="text-xs text-gray-400">{complex.prices.highestPriceDate}</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-gray-400">현재가</p>
-              <p className="text-sm font-bold text-blue-600">{formatPrice(complex.prices.current24py)}</p>
+              <p className="text-sm font-bold text-blue-600">{formatPrice(getComparisonPrice(complex))}</p>
               <p className="text-xs text-gray-400">2025-05 (추정)</p>
             </div>
             <div className="text-center">
@@ -110,7 +110,7 @@ export default async function ComplexDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
         </div>
-        <PriceChart data={complex.prices.priceHistory} highestPrice={complex.prices.highestPrice24py} />
+        <PriceChart data={complex.prices.priceHistory} highestPrice={getComparisonHighestPrice(complex)} priceKey={getComparisonPriceKey(complex)} />
         <p className="text-xs text-gray-400 mt-2">* 모든 가격은 추정치. 국토부 실거래가 공개시스템 재확인 필요. 출처: {complex.prices.dataSource}</p>
       </div>
 

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { TARGET_COMPLEXES, CURRENT_APARTMENT } from '@/data/complexes';
+import { TARGET_COMPLEXES, CURRENT_APARTMENT, getComparisonPrice } from '@/data/complexes';
 import { formatPrice, calcFeasibility, DEFAULT_SIMULATION } from '@/data/calculations';
 import StageBadge from '@/components/StageBadge';
 import FeasibilityBadge from '@/components/FeasibilityBadge';
@@ -19,7 +19,7 @@ export default function ComparePage() {
 
   const sorted = [...TARGET_COMPLEXES].sort((a, b) => {
     if (sortKey === 'rank') return a.recommendationRank - b.recommendationRank;
-    if (sortKey === 'price') return a.prices.current24py - b.prices.current24py;
+    if (sortKey === 'price') return getComparisonPrice(a) - getComparisonPrice(b);
     if (sortKey === 'score') return b.scores.overall - a.scores.overall;
     if (sortKey === 'stage') return b.reconstruction.stageCode - a.reconstruction.stageCode;
     if (sortKey === 'units') return b.basicInfo.totalUnits - a.basicInfo.totalUnits;
@@ -70,7 +70,7 @@ export default function ComparePage() {
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th className="text-left py-3 px-4 text-gray-500 font-medium sticky left-0 bg-gray-50 min-w-[110px]">단지명</th>
-                <th className="text-center py-3 px-3 text-gray-500 font-medium">현재가(24평)</th>
+                <th className="text-center py-3 px-3 text-gray-500 font-medium">현재가(인덕원 24평/송파 32평)</th>
                 <th className="text-center py-3 px-3 text-gray-500 font-medium">세대수</th>
                 <th className="text-center py-3 px-3 text-gray-500 font-medium">준공</th>
                 <th className="text-center py-3 px-3 text-gray-500 font-medium">용적률</th>
@@ -94,7 +94,7 @@ export default function ComparePage() {
                   </div>
                 </td>
                 <td className="py-3 px-3 text-center font-bold text-gray-700">
-                  {formatPrice(CURRENT_APARTMENT.prices.current24py)}
+                  {formatPrice(CURRENT_APARTMENT.prices.current24py)}<span className="text-xs text-gray-400 ml-1">24평</span>
                 </td>
                 <td className="py-3 px-3 text-center text-gray-600">
                   {CURRENT_APARTMENT.basicInfo.totalUnits.toLocaleString()}
@@ -137,8 +137,8 @@ export default function ComparePage() {
                       </div>
                     </td>
                     <td className="py-3 px-3 text-center">
-                      <span className="font-black text-gray-900">{formatPrice(complex.prices.current24py)}</span>
-                      <p className="text-xs text-gray-400">확인 필요</p>
+                      <span className="font-black text-gray-900">{formatPrice(getComparisonPrice(complex))}</span>
+                      <p className="text-xs text-gray-400">32평 · 확인 필요</p>
                     </td>
                     <td className="py-3 px-3 text-center text-gray-700">
                       {complex.basicInfo.totalUnits.toLocaleString()}

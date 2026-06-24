@@ -49,7 +49,10 @@ export function calcFeasibility(
   complex: Complex,
   params: SimulationParams
 ): FeasibilityResult {
-  const priceWon = toWon(complex.prices.current24py);
+  const priceManwon = complex.type === 'target' && complex.prices.current32py
+    ? complex.prices.current32py
+    : complex.prices.current24py;
+  const priceWon = toWon(priceManwon);
   const sellPriceWon = toWon(params.sellPrice);
   const cashWon = toWon(params.cash);
   const loanWon = toWon(params.loan);
@@ -79,7 +82,7 @@ export function calcFeasibility(
 
   return {
     complexId: complex.id,
-    targetPrice: complex.prices.current24py,
+    targetPrice: priceManwon,
     acquisitionTax: toManwon(acquisitionTax),
     agencyFee: toManwon(agencyFee),
     movingCost: toManwon(movingCost),

@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { TARGET_COMPLEXES } from '@/data/complexes';
+import { TARGET_COMPLEXES, getComparisonPrice } from '@/data/complexes';
 import { formatPrice, calcFeasibility, toWon, calcAcquisitionTax, calcAgencyFee, MOVING_COST, CONTINGENCY, toManwon } from '@/data/calculations';
 import FeasibilityBadge from '@/components/FeasibilityBadge';
 import Link from 'next/link';
@@ -29,7 +29,7 @@ export default function SimulationPage() {
 
   // 취득세 계산 (선택된 단지 또는 첫 번째)
   const sampleComplex = selected?.complex ?? TARGET_COMPLEXES[0];
-  const samplePrice = toWon(sampleComplex.prices.current24py);
+  const samplePrice = toWon(getComparisonPrice(sampleComplex));
   const acqTax = toManwon(calcAcquisitionTax(samplePrice));
   const agFee = toManwon(calcAgencyFee(samplePrice) + calcAgencyFee(toWon(sellPrice)));
   const misc = toManwon(MOVING_COST + CONTINGENCY);
@@ -51,7 +51,7 @@ export default function SimulationPage() {
 
         {/* 매도가 */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-700 mb-3 text-sm">인덕원삼성 매도가 (24평)</h3>
+          <h3 className="font-bold text-gray-700 mb-3 text-sm">인덕원삼성 매도가 (현재 보유 24평)</h3>
           <div className="flex gap-2">
             {SELL_OPTIONS.map((v) => (
               <button
@@ -67,7 +67,7 @@ export default function SimulationPage() {
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-400 mt-2">인덕원마을삼성 24평 최근 시세 기준 (추정)</p>
+          <p className="text-xs text-gray-400 mt-2">인덕원마을삼성 24평 최근 시세 기준 (추정) — 타겟 단지는 32평 기준</p>
         </div>
 
         {/* 현금 */}
@@ -168,7 +168,7 @@ export default function SimulationPage() {
             <div className="space-y-3">
               <h4 className="text-sm font-bold text-gray-700">비용 내역</h4>
               {[
-                { label: '매수가 (24평, 추정)', value: formatPrice(selected.f.targetPrice), isMain: true },
+                { label: '매수가 (32평, 추정)', value: formatPrice(selected.f.targetPrice), isMain: true },
                 { label: '취득세 (추정, 1주택 기준)', value: formatPrice(selected.f.acquisitionTax), note: '9억 초과: 3%' },
                 { label: '중개수수료 (매수+매도)', value: formatPrice(selected.f.agencyFee), note: '상한 기준' },
                 { label: '이사비', value: formatPrice(selected.f.movingCost) },

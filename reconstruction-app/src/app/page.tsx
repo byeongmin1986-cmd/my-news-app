@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { TARGET_COMPLEXES, CURRENT_APARTMENT } from '@/data/complexes';
+import { TARGET_COMPLEXES, CURRENT_APARTMENT, getComparisonPrice, getComparisonSize } from '@/data/complexes';
 import { formatPrice, calcFeasibility, DEFAULT_SIMULATION } from '@/data/calculations';
 import StageBadge from '@/components/StageBadge';
 import FeasibilityBadge from '@/components/FeasibilityBadge';
@@ -35,7 +35,7 @@ export default function DashboardPage() {
               인덕원 → 송파 재건축 갈아타기 분석기
             </h1>
             <p className="text-blue-100 mt-2 text-sm">
-              인덕원마을삼성 24평 매도 후 송파구 재건축 단지 진입 시나리오
+              인덕원마을삼성 24평 매도 후 송파구 재건축 32평 진입 시나리오
             </p>
           </div>
           <div className="flex gap-3 flex-wrap">
@@ -112,8 +112,8 @@ export default function DashboardPage() {
 
                 <div className="flex justify-between items-end mb-4">
                   <div>
-                    <p className="text-xs text-gray-400">24평 현재가 (추정)</p>
-                    <p className="text-lg font-black text-gray-900">{formatPrice(complex.prices.current24py)}</p>
+                    <p className="text-xs text-gray-400">{getComparisonSize(complex)} 현재가 (추정)</p>
+                    <p className="text-lg font-black text-gray-900">{formatPrice(getComparisonPrice(complex))}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-gray-400">전고점 회복률</p>
@@ -158,8 +158,8 @@ export default function DashboardPage() {
 
                 <div className="grid grid-cols-3 gap-2 mb-3 text-center">
                   <div>
-                    <p className="text-xs text-gray-400">현재가(추정)</p>
-                    <p className="text-sm font-black text-gray-900">{formatPrice(complex.prices.current24py)}</p>
+                    <p className="text-xs text-gray-400">{getComparisonSize(complex)} 현재가(추정)</p>
+                    <p className="text-sm font-black text-gray-900">{formatPrice(getComparisonPrice(complex))}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-400">세대수</p>
@@ -200,9 +200,9 @@ export default function DashboardPage() {
             <tbody>
               {[
                 {
-                  label: '현재 시세 (24평)',
+                  label: '현재 시세 (인덕원 24평 / 송파 32평)',
                   current: formatPrice(CURRENT_APARTMENT.prices.current24py),
-                  values: sorted.slice(0, 3).map((c) => formatPrice(c.prices.current24py)),
+                  values: sorted.slice(0, 3).map((c) => formatPrice(getComparisonPrice(c))),
                 },
                 {
                   label: '소재지',

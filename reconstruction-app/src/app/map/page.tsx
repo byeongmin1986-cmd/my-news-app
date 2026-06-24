@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { TARGET_COMPLEXES, CURRENT_APARTMENT } from '@/data/complexes';
+import { TARGET_COMPLEXES, CURRENT_APARTMENT, getComparisonPrice, getComparisonSize } from '@/data/complexes';
 import { formatPrice } from '@/data/calculations';
 import StageBadge from '@/components/StageBadge';
 import ScoreBar from '@/components/ScoreBar';
@@ -193,7 +193,7 @@ export default function MapPage() {
                       {complex.shortName}
                     </text>
                     <text x={x} y={y + 35} textAnchor="middle" fontSize={8} fill="#6b7280">
-                      {formatPrice(complex.prices.current24py)}
+                      {formatPrice(getComparisonPrice(complex))}
                     </text>
 
                     {/* Popup on hover */}
@@ -205,7 +205,7 @@ export default function MapPage() {
                           {complex.shortName}
                         </text>
                         <text x={x} y={y - 30} textAnchor="middle" fontSize={8} fill="#d1d5db">
-                          {formatPrice(complex.prices.current24py)} (24평)
+                          {formatPrice(getComparisonPrice(complex))} ({getComparisonSize(complex)})
                         </text>
                         <text x={x} y={y - 18} textAnchor="middle" fontSize={7} fill="#9ca3af">
                           클릭하여 상세 보기
@@ -257,8 +257,8 @@ export default function MapPage() {
 
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-gray-50 rounded-lg p-2 text-center">
-                  <p className="text-xs text-gray-400">24평 현재가</p>
-                  <p className="font-black text-gray-900 text-sm">{formatPrice(selected.prices.current24py)}</p>
+                  <p className="text-xs text-gray-400">{getComparisonSize(selected)} 현재가</p>
+                  <p className="font-black text-gray-900 text-sm">{formatPrice(getComparisonPrice(selected))}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-2 text-center">
                   <p className="text-xs text-gray-400">세대수</p>
@@ -313,7 +313,7 @@ export default function MapPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-gray-800 text-sm group-hover:text-blue-700">{c.shortName}</p>
-                      <p className="text-xs text-gray-400">{formatPrice(c.prices.current24py)} · {c.location.neighborhood}</p>
+                      <p className="text-xs text-gray-400">{formatPrice(getComparisonPrice(c))} ({getComparisonSize(c)}) · {c.location.neighborhood}</p>
                     </div>
                     <StageBadge stageCode={c.reconstruction.stageCode} />
                   </button>
