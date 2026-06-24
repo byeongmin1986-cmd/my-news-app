@@ -1,13 +1,15 @@
-'use client';
-import { use } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getComplexById } from '@/data/complexes';
+import { getComplexById, TARGET_COMPLEXES } from '@/data/complexes';
 import { formatPrice, calcFeasibility, DEFAULT_SIMULATION, calcStageProgress } from '@/data/calculations';
 import StageBadge from '@/components/StageBadge';
 import ScoreBar from '@/components/ScoreBar';
 import FeasibilityBadge from '@/components/FeasibilityBadge';
 import PriceChart from '@/components/PriceChart';
+
+export function generateStaticParams() {
+  return TARGET_COMPLEXES.map((c) => ({ id: c.id })).concat([{ id: 'indukwon-samsung' }]);
+}
 
 const STAGE_STEPS = [
   '기본계획',
@@ -21,8 +23,8 @@ const STAGE_STEPS = [
   '준공',
 ];
 
-export default function ComplexDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default async function ComplexDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const complex = getComplexById(id);
   if (!complex) notFound();
 
@@ -43,7 +45,7 @@ export default function ComplexDetailPage({ params }: { params: Promise<{ id: st
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               {complex.type === 'target' && (
                 <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                   {complex.recommendationRank}순위 추천
@@ -85,7 +87,7 @@ export default function ComplexDetailPage({ params }: { params: Promise<{ id: st
         ))}
       </div>
 
-      {/* Price chart + recovery */}
+      {/* Price chart */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-lg font-black text-gray-900">가격 추이 (24평 기준)</h2>
@@ -123,7 +125,7 @@ export default function ComplexDetailPage({ params }: { params: Promise<{ id: st
           </div>
           <div className="w-full bg-gray-100 rounded-full h-3">
             <div
-              className="bg-blue-500 h-3 rounded-full transition-all duration-700"
+              className="bg-blue-500 h-3 rounded-full"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -136,7 +138,6 @@ export default function ComplexDetailPage({ params }: { params: Promise<{ id: st
               const stepCode = i + 1;
               const completed = stepCode < complex.reconstruction.stageCode;
               const current = stepCode === complex.reconstruction.stageCode;
-              const future = stepCode > complex.reconstruction.stageCode;
               return (
                 <div key={step} className="flex items-center gap-3 relative pl-7">
                   <div className={`absolute left-0 w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold z-10 ${
@@ -170,13 +171,13 @@ export default function ComplexDetailPage({ params }: { params: Promise<{ id: st
           </p>
         </div>
         {!complex.reconstruction.verified && (
-          <p className="text-xs text-yellow-700 mt-2 flex items-center gap-1">
+          <p className="text-xs text-yellow-700 mt-2">
             ⚠️ 사업 단계 정보 확인 필요: {complex.reconstruction.dataSource}
           </p>
         )}
       </div>
 
-      {/* Financial simulation for this complex */}
+      {/* Financial simulation */}
       {complex.type === 'target' && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <h2 className="text-lg font-black text-gray-900 mb-4">자금 계획 (기본 시나리오)</h2>
@@ -186,8 +187,8 @@ export default function ComplexDetailPage({ params }: { params: Promise<{ id: st
               { label: '취득세 (추정)', value: formatPrice(f.acquisitionTax), color: 'text-orange-600' },
               { label: '중개수수료', value: formatPrice(f.agencyFee), color: 'text-orange-600' },
               { label: '이사비+예비비', value: formatPrice(f.movingCost + f.contingency), color: 'text-orange-600' },
-              { label: '총 필요 금액', value: formatPrice(f.totalRequired), color: 'text-red-600 font-black' },
-              { label: '현재 자본(추정)', value: formatPrice(f.available), color: 'text-green-600 font-black' },
+              { label: '총 필요 금액', value: formatPrice(f.totalRequired), color: 'text-red-600' },
+              { label: '현재 자본(추정)', value: formatPrice(f.available), color: 'text-green-600' },
             ].map((item) => (
               <div key={item.label} className="bg-gray-50 rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-400 mb-1">{item.label}</p>
@@ -204,10 +205,7 @@ export default function ComplexDetailPage({ params }: { params: Promise<{ id: st
             <FeasibilityBadge status={f.status} />
           </div>
 
-          <Link
-            href="/simulation"
-            className="block mt-3 text-center text-sm text-blue-600 hover:underline"
-          >
+          <Link href="/simulation" className="block mt-3 text-center text-sm text-blue-600 hover:underline">
             자금 조건 변경하여 재계산 →
           </Link>
         </div>
@@ -238,40 +236,31 @@ export default function ComplexDetailPage({ params }: { params: Promise<{ id: st
       {/* Pros / Cons / Risks */}
       <div className="grid sm:grid-cols-3 gap-4">
         <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-          <h3 className="font-bold text-green-800 mb-3 flex items-center gap-1">
-            <span>✅</span> 장점
-          </h3>
+          <h3 className="font-bold text-green-800 mb-3">✅ 장점</h3>
           <ul className="space-y-2">
             {complex.pros.map((p, i) => (
               <li key={i} className="text-xs text-green-700 flex items-start gap-1.5">
-                <span className="text-green-500 mt-0.5 flex-shrink-0">•</span>
-                {p}
+                <span className="text-green-500 mt-0.5 flex-shrink-0">•</span>{p}
               </li>
             ))}
           </ul>
         </div>
         <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
-          <h3 className="font-bold text-yellow-800 mb-3 flex items-center gap-1">
-            <span>⚠️</span> 단점
-          </h3>
+          <h3 className="font-bold text-yellow-800 mb-3">⚠️ 단점</h3>
           <ul className="space-y-2">
             {complex.cons.map((c, i) => (
               <li key={i} className="text-xs text-yellow-700 flex items-start gap-1.5">
-                <span className="text-yellow-500 mt-0.5 flex-shrink-0">•</span>
-                {c}
+                <span className="text-yellow-500 mt-0.5 flex-shrink-0">•</span>{c}
               </li>
             ))}
           </ul>
         </div>
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
-          <h3 className="font-bold text-red-800 mb-3 flex items-center gap-1">
-            <span>🔴</span> 리스크
-          </h3>
+          <h3 className="font-bold text-red-800 mb-3">🔴 리스크</h3>
           <ul className="space-y-2">
             {complex.risks.map((r, i) => (
               <li key={i} className="text-xs text-red-700 flex items-start gap-1.5">
-                <span className="text-red-500 mt-0.5 flex-shrink-0">•</span>
-                {r}
+                <span className="text-red-500 mt-0.5 flex-shrink-0">•</span>{r}
               </li>
             ))}
           </ul>
@@ -285,17 +274,16 @@ export default function ComplexDetailPage({ params }: { params: Promise<{ id: st
           <ul className="space-y-2">
             {complex.wifePersuasionPoints.map((p, i) => (
               <li key={i} className="text-sm text-pink-700 flex items-start gap-2">
-                <span className="text-pink-400 text-lg leading-5">✦</span>
-                {p}
+                <span className="text-pink-400 text-lg leading-5">✦</span>{p}
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      {/* Nearby schools */}
+      {/* Schools & Transport */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-        <h2 className="text-lg font-black text-gray-900 mb-3">학군 정보</h2>
+        <h2 className="text-lg font-black text-gray-900 mb-3">학군 및 교통 정보</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <p className="text-sm font-bold text-gray-700 mb-2">인근 학교</p>
@@ -331,20 +319,13 @@ export default function ComplexDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Navigation */}
       <div className="flex gap-3 justify-between">
-        <Link
-          href="/compare"
-          className="flex-1 text-center bg-gray-100 text-gray-700 rounded-xl py-3 font-bold hover:bg-gray-200 transition-colors"
-        >
+        <Link href="/compare" className="flex-1 text-center bg-gray-100 text-gray-700 rounded-xl py-3 font-bold hover:bg-gray-200 transition-colors">
           ← 전체 비교
         </Link>
-        <Link
-          href="/simulation"
-          className="flex-1 text-center bg-blue-600 text-white rounded-xl py-3 font-bold hover:bg-blue-700 transition-colors"
-        >
+        <Link href="/simulation" className="flex-1 text-center bg-blue-600 text-white rounded-xl py-3 font-bold hover:bg-blue-700 transition-colors">
           자금 시뮬레이션 →
         </Link>
       </div>
-
     </div>
   );
 }
