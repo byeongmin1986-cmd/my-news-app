@@ -609,7 +609,136 @@ export const COMPLEXES: Complex[] = [
     recommendationSummary: '가락동 내 교통 접근성 우수. 사업 초기 단계 리스크 감안 필요',
   },
 
-  // ─── 5. 가락프라자아파트 ────────────────────────────────────────
+  // ─── 5. 과천 래미안슈르 ─────────────────────────────────────────
+  {
+    id: 'gwacheon-raemian-shure',
+    name: '과천래미안슈르',
+    shortName: '과천래미안슈르',
+    type: 'target',
+
+    location: {
+      address: '경기도 과천시 별양동·원문동',
+      district: '과천시',
+      neighborhood: '별양동',
+      lat: 37.4320,
+      lng: 127.0025,
+      subwayStations: [
+        { name: '과천역', line: '4호선', walkMinutes: 10 },
+        { name: '정부청사역', line: '4호선', walkMinutes: 12 },
+      ],
+      nearbySchools: [
+        { name: '별양초등학교', type: '초', distanceM: 400 },
+        { name: '과천중학교', type: '중', distanceM: 600 },
+        { name: '과천고등학교', type: '고', distanceM: 700 },
+      ],
+      nearbyFeatures: [
+        '4호선 과천역·정부청사역 역세권',
+        '과천 정부청사 인근',
+        '과천대공원·서울대공원 인접',
+        '과천과학관',
+        '관악산 등산로',
+        '경마공원 인근',
+      ],
+    },
+
+    basicInfo: {
+      builtYear: 2006,
+      totalUnits: 3143,
+      floorAreaRatio: 195,
+      buildingCoverage: 20,
+      avgLandShare: 13,
+      verified: false,
+    },
+
+    prices: {
+      current24py: 115000,
+      current32py: 160000,
+      current34py: 170000,
+      current42py: 215000,
+      recentTransactionDate: '2025-05',
+      highestPrice24py: 137000,
+      highestPrice32py: 190000,
+      highestPriceDate: '2022-01',
+      recoveryRate: 84,
+      priceHistory: [
+        { date: '2020-01', price24py: 68000, price32py: 95000 },
+        { date: '2020-07', price24py: 82000, price32py: 115000 },
+        { date: '2021-01', price24py: 104000, price32py: 145000 },
+        { date: '2021-07', price24py: 125000, price32py: 175000 },
+        { date: '2022-01', price24py: 137000, price32py: 190000 },
+        { date: '2022-07', price24py: 125000, price32py: 175000 },
+        { date: '2023-01', price24py: 104000, price32py: 145000 },
+        { date: '2023-07', price24py: 107000, price32py: 148000 },
+        { date: '2024-01', price24py: 109000, price32py: 152000 },
+        { date: '2024-07', price24py: 112000, price32py: 156000 },
+        { date: '2025-01', price24py: 114000, price32py: 158000 },
+        { date: '2025-05', price24py: 115000, price32py: 160000 },
+      ],
+      verified: false,
+      dataSource: '웹서치 기반 추정 (2024 실거래 약 15.8억 참고). 국토부 실거래가 공개시스템 재확인 권장',
+    },
+
+    reconstruction: {
+      stage: '재건축 가능 검토 단계',
+      stageCode: 1,
+      stageDetail: '용적률 195%로 재건축 요건 충족 가능 — 공식 추진 미확인, 초기 검토 단계',
+      associationEstablished: false,
+      businessApprovalDate: '',
+      managementDisposalDate: '',
+      relocationCompleted: false,
+      constructionStarted: false,
+      expectedCompletion: '미정 (재건축 미추진)',
+      expectedUnitsAfter: 4500,
+      expectedFARAfter: 270,
+      generalSaleUnits: 1200,
+      contractor: '미정',
+      expectedBrand: '미정 (대형 브랜드 가능성)',
+      profitabilityNotes: '용적률 195% → 재건축 법적 요건 충족 가능. 3,143세대 대단지 — 재건축 시 사업성 우수 예상. 단, 2006년 준공으로 재건축 추진 시기는 상당히 장기적',
+      verified: false,
+      dataSource: '확인 필요 (과천시청 공식 자료 재확인 권장)',
+    },
+
+    scores: {
+      location: 72,
+      school: 75,
+      transport: 70,
+      profitability: 75,
+      risk: 60,
+      overall: 72,
+      investmentAttractiveness: 73,
+      livingComfort: 78,
+    },
+
+    pros: [
+      '용적률 195% — 재건축 법적 요건 충족 가능 (200% 미만)',
+      '3,143세대 대단지 — 재건축 시 사업성 우수 예상',
+      '4호선 역세권 (과천역·정부청사역 인근)',
+      '과천대공원·서울대공원·관악산 등 자연환경 탁월',
+      '5개 송파구 단지 대비 현재 매수가 낮아 진입 유리',
+      '과천 정부청사 인근 — 안정적 수요 기반',
+    ],
+    cons: [
+      '서울이 아닌 경기도 과천 — 서울 프리미엄 미적용',
+      '2006년 준공 — 재건축 추진까지 장기간 소요',
+      '현재 재건축 공식 추진 없음 — 불확실성 최고 수준',
+      '서울 도심 접근에 4호선 환승 필요 (30~40분)',
+    ],
+    risks: [
+      '재건축 미추진 시 단순 노후 아파트로 전락 가능',
+      '경기도 소재로 정책 변화(투기과열구역 지정 등) 영향 다를 수 있음',
+      '재건축 추진 자체가 장기 미정 — 투자 시간가치 리스크',
+    ],
+    wifePersuasionPoints: [
+      '과천대공원·서울대공원 도보권 — 아이와 주말 나들이 최고 환경',
+      '관악산 등산로 인접 — 자연 속 생활',
+      '3,143세대 대단지 — 단지 내 모든 편의시설 완비',
+      '과천 학군 준수 — 안정적인 교육 환경',
+    ],
+    recommendationRank: 5,
+    recommendationSummary: '서울 외 과천 입지지만 용적률 195%로 재건축 잠재력 보유. 자연환경·대단지 강점. 재건축 불확실성 높아 장기 투자 관점 필요',
+  },
+
+  // ─── 6. 가락프라자아파트 ────────────────────────────────────────
   {
     id: 'garak-plaza',
     name: '가락프라자아파트',
@@ -725,7 +854,7 @@ export const COMPLEXES: Complex[] = [
       '8호선 송파역 5분 — 강남까지 직통',
       '예산 내에서 여유롭게 진입 가능한 유일한 선택지',
     ],
-    recommendationRank: 5,
+    recommendationRank: 6,
     recommendationSummary: '예산 여유 최대. 단, 소규모 재건축 리스크 가장 높음 — 신중 검토 필요',
   },
 ];
