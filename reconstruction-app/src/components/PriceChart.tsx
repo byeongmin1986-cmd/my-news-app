@@ -5,7 +5,7 @@ import { PricePoint } from '@/data/types';
 interface Props {
   data: PricePoint[];
   highestPrice?: number;
-  priceKey?: 'price24py' | 'price32py';
+  priceKey?: 'price24py' | 'price27py' | 'price32py';
 }
 
 function formatTick(manwon: number): string {

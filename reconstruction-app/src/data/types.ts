@@ -1,6 +1,7 @@
 export interface PricePoint {
   date: string; // YYYY-MM
   price24py: number; // 만원
+  price27py?: number;
   price32py?: number;
   price34py?: number;
   price42py?: number;
@@ -47,13 +48,17 @@ export interface Complex {
     verified: boolean;
   };
 
+  comparePy?: 27 | 32; // 비교 기준 평형 (미지정 시 target=32, current=24)
+
   prices: {
     current24py: number;
+    current27py?: number;
     current32py?: number;
     current34py: number;
     current42py: number;
     recentTransactionDate: string;
     highestPrice24py: number;
+    highestPrice27py?: number;
     highestPrice32py?: number;
     highestPriceDate: string;
     recoveryRate: number;

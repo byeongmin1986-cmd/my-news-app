@@ -114,7 +114,139 @@ export const COMPLEXES: Complex[] = [
     recommendationSummary: '현재 보유 자산 — 비교 기준점',
   },
 
-  // ─── 1. 올림픽훼밀리타운 ────────────────────────────────────────
+  // ─── 1. 일원가람아파트 ──────────────────────────────────────────
+  {
+    id: 'ilwon-garam',
+    name: '일원가람아파트',
+    shortName: '일원가람',
+    type: 'target',
+    comparePy: 27,
+
+    location: {
+      address: '서울 강남구 일원동 735',
+      district: '강남구',
+      neighborhood: '일원동',
+      lat: 37.4882,
+      lng: 127.0685,
+      subwayStations: [
+        { name: '일원역', line: '수인분당선', walkMinutes: 7 },
+        { name: '대청역', line: '3호선', walkMinutes: 15 },
+      ],
+      nearbySchools: [
+        { name: '일원초등학교', type: '초', distanceM: 300 },
+        { name: '개원중학교', type: '중', distanceM: 500 },
+        { name: '중동고등학교', type: '고', distanceM: 700 },
+      ],
+      nearbyFeatures: [
+        '수인분당선 일원역 역세권',
+        '대치동 학원가 차량 10분',
+        '강남세브란스병원 인근',
+        '탄천 산책로 인접',
+        '개포·일원 재건축 벨트',
+        '삼성서울병원 인근',
+      ],
+    },
+
+    basicInfo: {
+      builtYear: 1993,
+      totalUnits: 496,
+      floorAreaRatio: 109,
+      buildingCoverage: 20,
+      avgLandShare: 22,
+      verified: false,
+    },
+
+    prices: {
+      current24py: 215000,
+      current27py: 270000,
+      current34py: 345000,
+      current42py: 430000,
+      recentTransactionDate: '2025-06',
+      highestPrice24py: 264000,
+      highestPrice27py: 330000,
+      highestPriceDate: '2022-01',
+      recoveryRate: 82,
+      priceHistory: [
+        { date: '2020-01', price24py: 140000, price27py: 175000 },
+        { date: '2020-07', price24py: 164000, price27py: 205000 },
+        { date: '2021-01', price24py: 204000, price27py: 255000 },
+        { date: '2021-07', price24py: 244000, price27py: 305000 },
+        { date: '2022-01', price24py: 264000, price27py: 330000 },
+        { date: '2022-07', price24py: 232000, price27py: 290000 },
+        { date: '2023-01', price24py: 192000, price27py: 240000 },
+        { date: '2023-07', price24py: 194000, price27py: 242000 },
+        { date: '2024-01', price24py: 198000, price27py: 248000 },
+        { date: '2024-07', price24py: 206000, price27py: 258000 },
+        { date: '2025-03', price24py: 222000, price27py: 278000 },
+        { date: '2025-06', price24py: 216000, price27py: 270000 },
+      ],
+      verified: false,
+      dataSource: '실거래 기반 (2025.03 27평 실거래 27.8억, 3개월 시세 25.4억 참고). 국토부 실거래가 공개시스템 재확인 권장',
+    },
+
+    reconstruction: {
+      stage: '정비구역 지정 추진',
+      stageCode: 2,
+      stageDetail: '2024년 6월 예비안전진단 통과. 강남구 정비계획 결정 및 정비구역 지정 주민공람 진행 중. 재건축 후 828가구(임대 77 포함) 예정',
+      associationEstablished: false,
+      businessApprovalDate: '',
+      managementDisposalDate: '',
+      relocationCompleted: false,
+      constructionStarted: false,
+      expectedCompletion: '2033년 이후 (확인 필요)',
+      expectedUnitsAfter: 828,
+      expectedFARAfter: 300,
+      generalSaleUnits: 280,
+      contractor: '미정',
+      expectedBrand: '미정 (대형 브랜드 유치 기대)',
+      profitabilityNotes: '용적률 109% → 재건축 시 300%+로 상향 가능. 5층 저층 → 고층 아파트 변신. 기존 496세대 → 828세대로 증가 (일반분양 약 280세대 예상). 강남구 내 최상급 재건축 수익성',
+      verified: false,
+      dataSource: '한국경제 2025.08.11 기사 (828가구 탈바꿈), 예비안전진단 통과 확인',
+    },
+
+    scores: {
+      location: 97,
+      school: 92,
+      transport: 78,
+      profitability: 95,
+      risk: 65,
+      overall: 90,
+      investmentAttractiveness: 95,
+      livingComfort: 82,
+    },
+
+    pros: [
+      '강남구 일원동 — 서울 최고급 주거지',
+      '용적률 109% → 재건축 수익성 단연 최상 (5층→고층 변신)',
+      '대치동 학원가 차량 10분 — 강남 학군 수혜',
+      '828가구 재건축 예정 — 일반분양 약 280세대로 사업성 확인',
+      '전세 끼면 갭 약 21억으로 진입 가능',
+      '강남세브란스·삼성서울병원 인근 — 의료 인프라 최상',
+    ],
+    cons: [
+      '현 매수가 약 29억 — 자기자본 대비 초과분 해소 필요',
+      '현재 5층 저층 — 재건축 완료 전 거주 환경 제한적',
+      '수인분당선만 역세권 (강남 접근에 3호선 환승 필요)',
+      '재건축 초기 단계 (정비구역 지정 추진) — 완료까지 10년 이상',
+      '갭투자 형태 필요 — 실거주 시 자금 부담 더 큼',
+    ],
+    risks: [
+      '정비구역 지정 지연 또는 사업성 재검토 가능성',
+      '강남 부동산 규제 변화 (투기과열구역 등) 영향',
+      '전세 끼고 매수 시 임차인 갱신청구권 리스크',
+      '재건축 초과이익 환수제 부담 높을 수 있음 (강남 지역 특성)',
+    ],
+    wifePersuasionPoints: [
+      '강남구 — 대한민국 교육·인프라 최고 주거지',
+      '대치 학원가 차량 10분 — 아이 교육 걱정 없음',
+      '강남세브란스·삼성서울병원 바로 근처 — 의료 안심',
+      '재건축 완료 후 강남 신축 아파트 거주 — 삶의 질 최상',
+    ],
+    recommendationRank: 1,
+    recommendationSummary: '강남구 최고 입지 + 용적률 109% 재건축 수익성 최강. 자금 확보 가능하면 단연 1순위 — 전세 끼면 갭 약 21억',
+  },
+
+  // ─── 2. 올림픽훼밀리타운 ────────────────────────────────────────
   {
     id: 'olympic-family',
     name: '올림픽훼밀리타운',
@@ -240,8 +372,8 @@ export const COMPLEXES: Complex[] = [
       '서울 최대급 단지 재건축 — 완공 후 서울에서 가장 주목받는 아파트 중 하나',
       '5호선·9호선 더블역세권 — 어디든 편리하게',
     ],
-    recommendationRank: 1,
-    recommendationSummary: '입지·브랜드 기대감 1위. 사업 기간 길지만 장기 보유시 최대 기대수익',
+    recommendationRank: 2,
+    recommendationSummary: '입지·브랜드 기대감 우수. 사업 기간 길지만 장기 보유시 최대 기대수익',
   },
 
   // ─── 2. 가락현대1차 ─────────────────────────────────────────────
@@ -366,8 +498,8 @@ export const COMPLEXES: Complex[] = [
       '8호선으로 강남 접근 직통 — 출퇴근 편리',
       '문정 법조타운·롯데몰 문정 인근 — 쇼핑·업무 편의시설 완비',
     ],
-    recommendationRank: 2,
-    recommendationSummary: '교통·입지 균형 우수. 적정 규모로 사업 속도 기대. 예산 내 진입 가능성 높음',
+    recommendationRank: 3,
+    recommendationSummary: '교통·입지 균형 우수. 사업시행인가 완료로 속도 빠름. 예산 내 진입 가능성 높음',
   },
 
   // ─── 3. 가락미륭아파트 ──────────────────────────────────────────
@@ -486,8 +618,8 @@ export const COMPLEXES: Complex[] = [
       '헬리오시티 바로 옆 생활 인프라 활용 가능',
       '8호선으로 강남 직통 접근',
     ],
-    recommendationRank: 4,
-    recommendationSummary: '예산 내 진입 용이. 소규모 리스크 감안 시 중간 순위',
+    recommendationRank: 5,
+    recommendationSummary: '예산 내 진입 용이. 사업시행인가 완료. 소규모 리스크 감안 시 중간 순위',
   },
 
   // ─── 4. 가락극동아파트 ──────────────────────────────────────────
@@ -605,8 +737,8 @@ export const COMPLEXES: Complex[] = [
       '헬리오시티 옆 생활권 — 백화점·마트·병원 모두 도보 거리',
       '8호선 직통으로 강남 출퇴근 편리',
     ],
-    recommendationRank: 3,
-    recommendationSummary: '가락동 내 교통 접근성 우수. 사업 초기 단계 리스크 감안 필요',
+    recommendationRank: 4,
+    recommendationSummary: '가락동 내 교통 접근성 우수. 사업시행인가 완료. 30평형 기준 예산 내 진입 가능',
   },
 
   // ─── 5. 과천 래미안슈르 ─────────────────────────────────────────
@@ -735,7 +867,7 @@ export const COMPLEXES: Complex[] = [
       '3,143세대 대단지 — 단지 내 모든 편의시설 완비',
       '과천 학군 준수 — 안정적인 교육 환경',
     ],
-    recommendationRank: 5,
+    recommendationRank: 6,
     recommendationSummary: '서울 외 과천 입지지만 용적률 195%로 재건축 잠재력 보유. 자연환경·대단지 강점. 재건축 불확실성 높아 장기 투자 관점 필요',
   },
 
@@ -855,33 +987,40 @@ export const COMPLEXES: Complex[] = [
       '8호선 송파역 5분 — 강남까지 직통',
       '예산 내에서 여유롭게 진입 가능한 유일한 선택지',
     ],
-    recommendationRank: 6,
-    recommendationSummary: '예산 여유 최대. 단, 소규모 재건축 리스크 가장 높음 — 신중 검토 필요',
+    recommendationRank: 7,
+    recommendationSummary: '사업시행인가 완료(2025.03). 672세대→1,059세대 통합 재건축. 단, 예산 초과 없는지 확인 필요',
   },
 ];
 
 export const getComplexById = (id: string): Complex | undefined =>
   COMPLEXES.find((c) => c.id === id);
 
-// 비교 기준 평형: 현재 아파트 24평, 타겟 아파트 32평
+// 비교 기준 평형: 현재 아파트 24평, 타겟 아파트 comparePy평 (기본 32평)
 export function getComparisonPrice(complex: Complex): number {
-  return complex.type === 'target' && complex.prices.current32py
-    ? complex.prices.current32py
-    : complex.prices.current24py;
+  if (complex.type === 'target') {
+    if (complex.comparePy === 27 && complex.prices.current27py) return complex.prices.current27py;
+    if (complex.prices.current32py) return complex.prices.current32py;
+  }
+  return complex.prices.current24py;
 }
 
 export function getComparisonSize(complex: Complex): string {
-  return complex.type === 'target' ? '32평' : '24평';
+  if (complex.type !== 'target') return '24평';
+  return complex.comparePy ? `${complex.comparePy}평` : '32평';
 }
 
 export function getComparisonHighestPrice(complex: Complex): number {
-  return complex.type === 'target' && complex.prices.highestPrice32py
-    ? complex.prices.highestPrice32py
-    : complex.prices.highestPrice24py;
+  if (complex.type === 'target') {
+    if (complex.comparePy === 27 && complex.prices.highestPrice27py) return complex.prices.highestPrice27py;
+    if (complex.prices.highestPrice32py) return complex.prices.highestPrice32py;
+  }
+  return complex.prices.highestPrice24py;
 }
 
-export function getComparisonPriceKey(complex: Complex): 'price24py' | 'price32py' {
-  return complex.type === 'target' ? 'price32py' : 'price24py';
+export function getComparisonPriceKey(complex: Complex): 'price24py' | 'price27py' | 'price32py' {
+  if (complex.type !== 'target') return 'price24py';
+  if (complex.comparePy === 27) return 'price27py';
+  return 'price32py';
 }
 
 export const TARGET_COMPLEXES = COMPLEXES.filter((c) => c.type === 'target');

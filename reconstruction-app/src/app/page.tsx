@@ -5,8 +5,8 @@ import StageBadge from '@/components/StageBadge';
 import FeasibilityBadge from '@/components/FeasibilityBadge';
 import ScoreBar from '@/components/ScoreBar';
 
-const RANK_COLORS = ['', 'bg-yellow-500', 'bg-gray-400', 'bg-amber-700', 'bg-slate-400', 'bg-slate-300', 'bg-zinc-400'];
-const RANK_LABELS = ['', '1순위', '2순위', '3순위', '4순위', '5순위', '6순위'];
+const RANK_COLORS = ['', 'bg-yellow-500', 'bg-gray-400', 'bg-amber-700', 'bg-slate-400', 'bg-slate-300', 'bg-zinc-400', 'bg-stone-400'];
+const RANK_LABELS = ['', '1순위', '2순위', '3순위', '4순위', '5순위', '6순위', '7순위'];
 
 export default function DashboardPage() {
   const myAssets = {
