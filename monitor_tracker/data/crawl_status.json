@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-08-24T07:26:05.095215",
+  "last_run": "2026-08-31T12:50:24.368312",
   "overall_status": "failed",
   "total_products": 0,
   "csv_exists": false,
@@ -10,21 +10,21 @@
       "status": "empty",
       "products": 0,
       "error": null,
-      "time": "2026-08-24T06:49:36.411853"
+      "time": "2026-08-31T12:30:03.650815"
     },
     "nigeria_jumia": {
       "label": "Jumia Nigeria",
       "status": "empty",
       "products": 0,
       "error": null,
-      "time": "2026-08-24T07:22:40.858904"
+      "time": "2026-08-31T12:47:32.128814"
     },
     "ghana_compughana": {
       "label": "CompuGhana",
       "status": "empty",
       "products": 0,
       "error": null,
-      "time": "2026-08-24T07:26:05.095201"
+      "time": "2026-08-31T12:50:24.368303"
     }
   }
 }
